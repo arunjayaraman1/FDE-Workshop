@@ -1,3 +1,20 @@
+I I’ve shared the following:
+
+- A short proposal
+- A presentation prototype
+- A GitHub repository
+
+There’s a slight twist: check the “presentation prototype.”
+
+
+
+
+
+
+
+
+
+
 # Launchpad
 
 Internal launchpad for scaffolding apps and deploying them to **Cloudflare** (Workers and Pages)
