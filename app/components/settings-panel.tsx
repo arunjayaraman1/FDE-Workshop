@@ -7,21 +7,26 @@ interface SettingsPanelProps {
   initialStatus: ConfigStatus;
 }
 
-function StatusRow({ label, ok, hint }: { label: string; ok: boolean; hint: string }) {
+function ShieldIcon() {
   return (
-    <div className="flex items-center justify-between gap-4 py-2.5">
-      <div className="min-w-0">
-        <div className="text-sm text-slate-200">{label}</div>
-        <div className="mt-0.5 truncate text-xs text-slate-500">{hint}</div>
-      </div>
-      <span
-        className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          ok ? "bg-emerald-500/15 text-emerald-300" : "bg-amber-500/15 text-amber-300"
-        }`}
-      >
-        {ok ? "OK" : "Missing"}
-      </span>
-    </div>
+    <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  );
+}
+function GearIcon() {
+  return (
+    <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+function PulseIcon() {
+  return (
+    <svg className="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
   );
 }
 
@@ -116,122 +121,122 @@ export default function SettingsPanel({ initialStatus }: SettingsPanelProps) {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-        <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-400">
-          Security status
-        </h2>
-        <div className="divide-y divide-slate-800/60">
+    <div className="set-grid">
+      <div className="card">
+        <div className="set-card-hd">
+          <ShieldIcon />
+          <div>
+            <h3>Security status</h3>
+            <p>Live health of the credentials Launchpad needs to do its job.</p>
+          </div>
+        </div>
+        <div className="set-body">
           {rows.map((r) => (
-            <StatusRow key={r.label} {...r} />
+            <div className="toggle-row" key={r.label}>
+              <div className="min-w-0 flex-1">
+                <div className="tr-name">{r.label}</div>
+                <div className="tr-desc">{r.hint}</div>
+              </div>
+              <span className={`pill${r.ok ? " ok" : " warn"}`}>
+                <span className="dot" />
+                {r.ok ? "OK" : "Missing"}
+              </span>
+            </div>
           ))}
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-        <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-slate-400">
-          Launchpad config
-        </h2>
-        <div className="space-y-4">
+      <form onSubmit={handleSave} className="card">
+        <div className="set-card-hd">
+          <GearIcon />
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-300">
-              Default Cloudflare account ID
-            </label>
+            <h3>Launchpad config</h3>
+            <p>Defaults used at launch time. Per-project overrides win.</p>
+          </div>
+        </div>
+        <div className="set-body">
+          <div className="field">
+            <label htmlFor="cf-account">Default Cloudflare account ID</label>
             <input
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
+              id="cf-account"
+              className="input"
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
               placeholder="32-char Cloudflare account ID"
               autoComplete="off"
             />
           </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-300">
-              GitHub PAT env var name
-            </label>
+          <div className="field" style={{ marginTop: 12 }}>
+            <label htmlFor="pat-var">GitHub PAT env var name</label>
             <input
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
+              id="pat-var"
+              className="input"
               value={patEnvVar}
               onChange={(e) => setPatEnvVar(e.target.value)}
               placeholder="GITHUB_PAT"
               autoComplete="off"
             />
           </div>
-
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-300">
-              Default AWS region
-            </label>
+          <div className="field" style={{ marginTop: 12 }}>
+            <label htmlFor="aws-region">Default AWS region</label>
             <input
-              className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
+              id="aws-region"
+              className="input"
               value={awsRegion}
               onChange={(e) => setAwsRegion(e.target.value)}
               placeholder="us-east-1"
               autoComplete="off"
             />
-            <p className="mt-1 text-[11px] text-slate-500">
-              Used for AWS deployments. Overridable per project at launch.
-            </p>
+            <p className="hint">Used for AWS deployments. Overridable per project at launch.</p>
           </div>
 
-          {error && (
-            <div className="rounded-md border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-              {error}
-            </div>
-          )}
-          {saved && (
-            <div className="rounded-md border border-emerald-800 bg-emerald-950/50 px-3 py-2 text-sm text-emerald-300">
-              Config saved.
-            </div>
-          )}
+          {error && <div className="alert-error">{error}</div>}
+          {saved && <div className="alert-ok">Config saved.</div>}
 
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-md bg-[#f6821f] px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-60"
+            className="btn primary"
+            style={{ width: "100%", marginTop: 14 }}
           >
             {saving ? "Saving…" : "Save config"}
           </button>
         </div>
       </form>
 
-      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400">
-            Recent activity
-          </h2>
-          <span className="text-xs text-slate-500">{audits.length} entries</span>
+      <div className="card">
+        <div className="set-card-hd">
+          <PulseIcon />
+          <div>
+            <h3>Recent activity</h3>
+            <p>{audits.length} audit entries</p>
+          </div>
         </div>
-        {audits.length === 0 ? (
-          <p className="text-sm text-slate-500">No activity recorded yet.</p>
-        ) : (
-          <div className="divide-y divide-slate-800/60">
-            {audits.map((a, i) => (
-              <div key={i} className="flex items-start justify-between gap-4 py-2.5">
-                <div className="min-w-0">
-                  <div className="text-sm text-slate-200">
-                    <span className="font-medium">{a.actor}</span>{" "}
-                    <span className="text-slate-500">{a.action}</span>
-                    <span className="ml-1 text-slate-400">{a.project}</span>
+        <div className="set-body" style={{ padding: 0 }}>
+          {audits.length === 0 ? (
+            <p style={{ padding: "18px", fontSize: 13, color: "var(--text-3)" }}>
+              No activity recorded yet.
+            </p>
+          ) : (
+            <div className="audit-table">
+              {audits.map((a, i) => (
+                <div className="toggle-row" key={i} style={{ padding: "11px 18px" }}>
+                  <div className="min-w-0 flex-1">
+                    <div className="tr-name" style={{ fontSize: 13 }}>
+                      <span>{a.actor}</span> <span style={{ color: "var(--text-3)", fontWeight: 500 }}>{a.action}</span>
+                    </div>
+                    <div className="tr-desc">{a.project ? `${a.project} — ` : ""}{a.detail}</div>
                   </div>
-                  <div className="mt-0.5 truncate text-xs text-slate-500">{a.detail}</div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      a.outcome === "ok"
-                        ? "bg-emerald-500/15 text-emerald-300"
-                        : "bg-red-500/15 text-red-300"
-                    }`}
-                  >
+                  <span className={`pill ${a.outcome}`}>
+                    <span className="dot" />
                     {a.outcome}
                   </span>
-                  <span className="text-[11px] text-slate-500">{new Date(a.at).toLocaleString()}</span>
+                  <span className="rel" style={{ fontSize: 11.5 }}>{new Date(a.at).toLocaleString()}</span>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -19,9 +19,9 @@ export default async function PreviewBranchPage({ params }: PageProps<"/projects
 
   if (project.type !== "worker") {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-[#060d1a] p-8">
+      <div className="flex min-h-dvh items-center justify-center p-8" style={{ background: "var(--surface-2)" }}>
         <div className="max-w-md text-center">
-          <p className="text-sm text-slate-400">
+          <p className="pmute">
             Per-branch preview deployments are not yet supported for Pages projects.
           </p>
         </div>

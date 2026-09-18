@@ -32,7 +32,56 @@ const platformLabel = (t: TemplateInfo) => {
   return t.type === "pages" ? "Cloudflare Pages" : "Cloudflare Workers";
 };
 
-export default function LaunchPad({ templates, envPatSet, envTokenSet, defaultAccountId, envAwsAccessKeySet, envAwsSecretKeySet, org }: LaunchPadProps) {
+const WIZ_STEPS: Array<{ no: string; t: string; h: string }> = [
+  { no: "01", t: "Language", h: "Pick a stack" },
+  { no: "02", t: "Template", h: "Choose a starter" },
+  { no: "03", t: "Configure", h: "Deploy options" },
+];
+
+const CAT_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 6h16M4 12h16M4 18h10" />
+  </svg>
+);
+
+const RocketIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2l2.2 2.5A8 8 0 0116.5 13l.8 5.4L12 21l-5.3-2.6.8-5.4A8 8 0 019.8 4.5L12 2z" />
+    <circle cx="12" cy="11" r="2.4" />
+  </svg>
+);
+
+const BldgIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 21h18" />
+    <path d="M5 21V7l7-4 7 4v14" />
+    <path d="M9 21v-4h6v4" />
+    <path d="M9 11h6" />
+  </svg>
+);
+
+const WarnIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 8v4M12 16h.01" />
+  </svg>
+);
+
+const CheckIcon = (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 12l5 5L20 7" />
+  </svg>
+);
+
+export default function LaunchPad({
+  templates,
+  envPatSet,
+  envTokenSet,
+  defaultAccountId,
+  envAwsAccessKeySet,
+  envAwsSecretKeySet,
+  org,
+}: LaunchPadProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -279,15 +328,22 @@ export default function LaunchPad({ templates, envPatSet, envTokenSet, defaultAc
 
   const importBlockers = analysis?.detection?.blockers ?? [];
 
+  const templateStack = (t: TemplateInfo) => {
+    const parts = [];
+    if (t.deploy?.runtime) parts.push(t.deploy.runtime);
+    if (t.buildCommand) parts.push("build: " + t.buildCommand);
+    return parts.join(", ") || "—";
+  };
+
+  /* ── IMPORT FLOW ────────────────────────────────────────────────── */
+
   if (importMode) {
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="section-title">
           <div>
-            <h2 className="text-xl font-semibold text-white">Deploy an existing project</h2>
-            <p className="text-sm text-slate-400">
-              Paste a GitHub repository URL and we&rsquo;ll deploy it to Cloudflare for you.
-            </p>
+            <h2>Deploy an existing project</h2>
+            <p className="pmute">Paste a GitHub URL from an app you (or your AI) already built.</p>
           </div>
           <button
             type="button"
@@ -297,39 +353,35 @@ export default function LaunchPad({ templates, envPatSet, envTokenSet, defaultAc
               setError(null);
               setStep(1);
             }}
-            className="shrink-0 rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
+            className="btn ghost sm"
           >
             ← Back
           </button>
         </div>
 
         {!analysis && (
-          <div className="space-y-4">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">
-                GitHub repository URL
-              </label>
+          <div className="card form-sec">
+            <div className="field">
+              <label>GitHub repository URL</label>
               <input
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
+                className="input"
                 value={importUrl}
                 onChange={(e) => setImportUrl(e.target.value)}
                 placeholder="https://github.com/owner/repo"
                 autoCapitalize="none"
                 autoCorrect="off"
               />
-              <p className="mt-1 text-[11px] text-slate-500">
+              <span className="help">
                 The repo stays in place; Launchpad adds a deploy workflow and Cloudflare config to
                 it.
-              </p>
+              </span>
             </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">
-                GitHub Personal Access Token
-              </label>
+            <div className="field">
+              <label>GitHub Personal Access Token</label>
               <input
                 type="password"
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
+                className="input"
                 value={importPat}
                 onChange={(e) => setImportPat(e.target.value)}
                 placeholder={envPatSet ? "Set via .env (optional here)" : "ghp_... (scopes: repo, workflow)"}
@@ -337,17 +389,14 @@ export default function LaunchPad({ templates, envPatSet, envTokenSet, defaultAc
               />
             </div>
 
-            {error && (
-              <div className="rounded-md border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                {error}
-              </div>
-            )}
+            {error && <div className="alert-error">{error}</div>}
 
             <button
               type="button"
               onClick={handleAnalyze}
               disabled={analyzing}
-              className="w-full rounded-md bg-[#f6821f] px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn primary lg"
+              style={{ width: "100%", justifyContent: "center" }}
             >
               {analyzing ? "Analyzing..." : "Analyze and plan the deploy"}
             </button>
@@ -355,29 +404,24 @@ export default function LaunchPad({ templates, envPatSet, envTokenSet, defaultAc
         )}
 
         {analysis && !analysis.plan && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <svg className="h-5 w-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v4M12 16h.01" />
-              </svg>
-              <span className="text-sm font-semibold text-amber-300">Hmm, this one needs a hand</span>
-            </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4 text-sm text-slate-300">
-              <p className="mb-2">{analysis.guidedFix?.reason}</p>
-              {importBlockers.length > 0 && (
-                <p className="mb-2 text-xs text-slate-400">
-                  Detected: <span className="text-slate-300">{importBlockers.join(", ")}</span>
-                </p>
-              )}
-              <div className="rounded-md border border-slate-800 bg-slate-900 p-3">
-                <span className="mb-1 block text-xs font-medium text-slate-400">
-                  Ask your AI tool to do this
-                </span>
-                <p className="whitespace-pre-wrap font-mono text-xs leading-relaxed text-slate-200">
-                  {analysis.guidedFix?.instruction}
-                </p>
+          <div className="card form-sec">
+            <div className="callout warn" style={{ marginTop: 0 }}>
+              {WarnIcon}
+              <div>
+                <div className="callout-t">This one needs a hand</div>
+                {analysis.guidedFix?.reason}
+                {importBlockers.length > 0 && (
+                  <div style={{ marginTop: 6, opacity: 0.85 }}>
+                    Detected: {importBlockers.join(", ")}
+                  </div>
+                )}
               </div>
+            </div>
+            <div className="field">
+              <label className="pmute">Ask your AI tool to do this</label>
+              <pre className="log-pre" style={{ whiteSpace: "pre-wrap", marginTop: 6 }}>
+                {analysis.guidedFix?.instruction}
+              </pre>
             </div>
             <button
               type="button"
@@ -385,7 +429,8 @@ export default function LaunchPad({ templates, envPatSet, envTokenSet, defaultAc
                 setAnalysis(null);
                 setError(null);
               }}
-              className="w-full rounded-md border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 hover:border-slate-500 hover:text-white"
+              className="btn outline"
+              style={{ width: "100%", justifyContent: "center" }}
             >
               Analyze a different repo
             </button>
@@ -393,930 +438,893 @@ export default function LaunchPad({ templates, envPatSet, envTokenSet, defaultAc
         )}
 
         {analysis && analysis.plan && (
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-300">
-                  Ready to deploy
-                </span>
-                <span className="text-sm text-slate-400">
-                  {analysis.detection.framework ?? "App"} ·{" "}
-                  {analysis.plan.deployKind === "pages" ? "Cloudflare Pages" : "Cloudflare Workers"}
-                </span>
-              </div>
+          <div className="config-split">
+            <div className="flex flex-col gap-5">
+              <div className="card form-sec">
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+                  <span className="pill ok">Ready to deploy</span>
+                  <span className="pmute">
+                    {analysis.detection.framework ?? "App"} ·{" "}
+                    {analysis.plan.deployKind === "pages" ? "Cloudflare Pages" : "Cloudflare Workers"}
+                  </span>
+                </div>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-950/50 px-3.5 py-3">
-                <span className="mb-2 block text-xs font-medium text-slate-300">
-                  What Launchpad will do
-                </span>
-                <p className="text-sm text-slate-200">{analysis.plan.summary}</p>
-                {analysis.plan.notes.length > 0 && (
-                  <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-400">
-                    {analysis.plan.notes.map((n) => (
-                      <li key={n}>{n}</li>
-                    ))}
-                  </ul>
-                )}
-                <dl className="mt-3 space-y-1.5 text-xs">
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Build command</dt>
-                    <dd className="truncate font-mono text-slate-200">{analysis.plan.buildCommand || "—"}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Deploy command</dt>
-                    <dd className="truncate font-mono text-slate-200">{analysis.plan.deployCommand}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Package manager</dt>
-                    <dd className="text-slate-200">{analysis.plan.packageManager ?? "—"}</dd>
-                  </div>
-                </dl>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-300">Project name</label>
-                <input
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                  value={importProjectName}
-                  onChange={(e) => setImportProjectName(e.target.value)}
-                  placeholder={analysis.repoTitle ?? "my-app"}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                />
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Used as the Cloudflare project/worker name.
+                <h3 style={{ marginBottom: 6 }}>What Launchpad will do</h3>
+                <p className="pmute" style={{ lineHeight: 1.6 }}>
+                  {analysis.plan.summary}
                 </p>
-              </div>
-
-              {analysis.plan.envVars.length > 0 && (
-                <div className="rounded-lg border border-slate-800 bg-slate-950/50 px-3.5 py-3">
-                  <span className="mb-2 block text-xs font-medium text-slate-300">
-                    Environment values
-                  </span>
-                  <p className="mb-2 text-[11px] text-slate-500">
-                    Optional. These are stored as GitHub repo secrets and used by the deploy.
-                  </p>
-                  <div className="space-y-2">
-                    {analysis.plan.envVars.map((v) => (
-                      <div key={v.key}>
-                        <label className="mb-0.5 block text-[11px] font-medium text-slate-400">
-                          {v.key}
-                        </label>
-                        <input
-                          type={v.kind === "secret" ? "password" : "text"}
-                          className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                          value={importEnvValues[v.key] ?? ""}
-                          onChange={(e) =>
-                            setImportEnvValues((prev) => ({ ...prev, [v.key]: e.target.value }))
-                          }
-                          placeholder={v.kind === "secret" ? "Leave blank to keep empty" : ""}
-                          autoComplete="off"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {error && (
-                <div className="rounded-md border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={handleImportDeploy}
-                disabled={importing}
-                className="w-full rounded-md bg-[#f6821f] px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {importing ? "Deploying..." : "Looks good, deploy →"}
-              </button>
-            </div>
-
-            <div className="lg:sticky lg:top-8 lg:self-start">
-              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-                <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-slate-400">
-                  Repo summary
-                </h2>
-                <dl className="space-y-3 text-xs">
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Repo</dt>
-                    <dd className="truncate text-slate-200" title={importUrl}>
-                      {analysis.repoTitle}
-                    </dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Branch</dt>
-                    <dd className="text-slate-200">{analysis.defaultBranch}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Files analyzed</dt>
-                    <dd className="text-slate-200">{analysis.files.length}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Deploy target</dt>
-                    <dd className="text-slate-200">
-                      {analysis.plan.deployKind === "pages" ? "Cloudflare Pages" : "Cloudflare Workers"}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  const templateStack = (t: TemplateInfo) => {
-    const parts = [];
-    if (t.deploy?.runtime) parts.push(t.deploy.runtime);
-    if (t.buildCommand) parts.push("build: " + t.buildCommand);
-    return parts.join(", ") || "—";
-  };
-
-  if (step === 1) {
-    return (
-      <div className="flex flex-col gap-8">
-        <h1 className="text-2xl font-semibold text-white">Launch a new app</h1>
-        <p className="text-slate-400">Choose a language and framework to get started.</p>
-        <div
-          className="flex flex-col rounded-xl border border-[#f6821f]/40 bg-[#f6821f]/5 p-4 transition-colors hover:border-[#f6821f] cursor-pointer"
-          onClick={() => {
-            setImportMode(true);
-            setError(null);
-          }}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-semibold text-white">Deploy an existing project</span>
-            <span className="shrink-0 rounded-full bg-[#f6821f]/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#f6821f]">
-              New
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-slate-400">
-            Paste a GitHub URL from an app you (or your AI) already built. Launchpad analyzes it and
-            deploys it to Cloudflare — with nothing to configure.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {CATEGORIES.map((cat) => (
-            <div
-              key={cat.id}
-              onClick={() => resetToCategory(cat.id)}
-              className="flex flex-col rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition-colors hover:border-slate-700 cursor-pointer"
-            >
-              <span className="text-sm font-semibold text-white">{cat.label}</span>
-              <p className="mt-1 text-xs text-slate-400">{cat.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (step === 2) {
-    return (
-      <>
-        <div className="flex flex-col gap-8">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-white">Choose a template</h2>
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            className="shrink-0 rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
-          >
-            ← Change language
-          </button>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categoryTemplates.map((t) => (
-            <div
-              key={t.id}
-              onClick={() => {
-                setSelected(t);
-                setStep(3);
-              }}
-              className="flex flex-col rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition-colors hover:border-slate-700 cursor-pointer"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span className="text-sm font-semibold text-white">{t.name}</span>
-                <span className="shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  {platformLabel(t)}
-                </span>
-              </div>
-              <p className="mt-1.5 flex-1 text-xs leading-relaxed text-slate-400">{t.description}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                {t.source === "c3" && (
-                  <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-300">
-                    create-cloudflare
-                  </span>
-                )}
-                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
-                  {CATEGORIES.find((c) => c.id === t.category)?.label ?? t.category}
-                </span>
-                <span className="rounded-full bg-slate-800/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  {t.deploy?.runtime ?? "—"}
-                </span>
-                {t.buildCommand && (
-                  <span className="rounded-full bg-slate-800/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                    build
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDetails(t);
-                }}
-                className="mt-4 w-full rounded-md border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-[#f6821f] hover:text-[#f6821f]"
-              >
-                View details
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-        {details && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-            onClick={() => setDetails(null)}
-            role="dialog"
-            aria-modal="true"
-            aria-label={`${details.name} details`}
-          >
-            <div
-              className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-base font-semibold text-white">{details.name}</h2>
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                      {platformLabel(details)}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-400">{details.description}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setDetails(null)}
-                  aria-label="Close"
-                  className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
-                >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M6 6l12 12M18 6L6 18" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
-                <div className="rounded-lg border border-slate-800 bg-slate-950/50 px-3.5 py-3">
-                  <span className="mb-2 block text-xs font-medium text-slate-300">Deployment</span>
-                  <dl className="space-y-1.5 text-xs">
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Platform</dt>
-                      <dd className="text-right text-slate-200">{platformLabel(details)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Source</dt>
-                      <dd className="text-right text-slate-200">
-                        {details.source === "c3" ? "create-cloudflare (live)" : "Built-in"}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Runtime</dt>
-                      <dd className="text-right text-slate-200">{templateStack(details)}</dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Setup</dt>
-                      <dd className="truncate font-mono text-slate-200" title={details.deploy?.setup}>
-                        {details.deploy?.setup ?? (details.buildCommand || "—")}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Deploy command</dt>
-                      <dd className="truncate font-mono text-slate-200" title={details.deploy?.command ?? details.deployCommand}>
-                        {details.deploy?.command ?? details.deployCommand}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Files</dt>
-                      <dd className="text-slate-200">{details.files.length}</dd>
-                    </div>
-                  </dl>
-                </div>
-
-                {details.c3 && (
-                  <div>
-                    <span className="mb-1.5 block text-xs font-medium text-slate-300">
-                      create-cloudflare command
-                    </span>
-                    <code className="block rounded-md bg-slate-950 px-3 py-2 font-mono text-[11px] leading-relaxed text-slate-300">
-                      npm create cloudflare@latest -- {details.c3.args.join(" ")}
-                    </code>
-                  </div>
-                )}
-
-                <div>
-                  <span className="mb-1.5 block text-xs font-medium text-slate-300">
-                    Files in template ({details.files.length})
-                  </span>
-                  <ul className="grid gap-x-6 gap-y-1 font-mono text-[11px] text-slate-400 sm:grid-cols-2">
-                    {details.files.map((f) => (
-                      <li key={f} className="truncate">
-                        {f}
+                {analysis.plan.notes.length > 0 && (
+                  <ul
+                    style={{
+                      listStyle: "disc",
+                      paddingLeft: 18,
+                      margin: "10px 0 16px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
+                    {analysis.plan.notes.map((n) => (
+                      <li key={n} className="pmute" style={{ fontSize: 12.5 }}>
+                        {n}
                       </li>
                     ))}
                   </ul>
+                )}
+                <div className="kv-row">
+                  <span className="k">Build command</span>
+                  <span className="url-cell" style={{ flex: 1 }}>
+                    {analysis.plan.buildCommand || "—"}
+                  </span>
                 </div>
-              </div>
+                <div className="kv-row">
+                  <span className="k">Deploy command</span>
+                  <span className="url-cell" style={{ flex: 1 }}>
+                    {analysis.plan.deployCommand}
+                  </span>
+                </div>
+                <div className="kv-row">
+                  <span className="k">Package manager</span>
+                  <span style={{ flex: 1 }}>{analysis.plan.packageManager ?? "—"}</span>
+                </div>
 
-              <div className="flex gap-2 border-t border-slate-800 px-5 py-4">
+                <div className="field" style={{ marginTop: 18 }}>
+                  <label>Project name</label>
+                  <input
+                    className="input"
+                    value={importProjectName}
+                    onChange={(e) => setImportProjectName(e.target.value)}
+                    placeholder={analysis.repoTitle ?? "my-app"}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                  />
+                  <span className="help">Used as the Cloudflare project/worker name.</span>
+                </div>
+
+                {analysis.plan.envVars.length > 0 && (
+                  <div>
+                    <span className="fieldset-div">Environment values</span>
+                    <p className="pmute" style={{ fontSize: 11.5 }}>
+                      Optional. These are stored as GitHub repo secrets and used by the deploy.
+                    </p>
+                    <div className="ev-rows">
+                      {analysis.plan.envVars.map((v) => (
+                        <div key={v.key} className="ev-row">
+                          <input
+                            type={v.kind === "secret" ? "password" : "text"}
+                            className="input"
+                            value={importEnvValues[v.key] ?? ""}
+                            onChange={(e) =>
+                              setImportEnvValues((prev) => ({ ...prev, [v.key]: e.target.value }))
+                            }
+                            placeholder={v.key}
+                            autoComplete="off"
+                          />
+                          <span className="kv-chip">{v.kind}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {error && <div className="alert-error" style={{ marginTop: 16 }}>{error}</div>}
+
                 <button
                   type="button"
-                  onClick={() => setDetails(null)}
-                  className="rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+                  onClick={handleImportDeploy}
+                  disabled={importing}
+                  className="btn primary lg"
+                  style={{ width: "100%", justifyContent: "center", marginTop: 18 }}
                 >
-                  Close
+                  {importing ? "Deploying..." : "Looks good, deploy →"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelected(details);
-                    setDetails(null);
-                    setStep(3);
-                  }}
-                  className="flex-1 rounded-md bg-[#f6821f] px-4 py-2 text-center text-xs font-semibold text-slate-950 transition-colors hover:bg-[#ff9436]"
-                >
-                  Use this template →
-                </button>
+              </div>
+            </div>
+
+            <div className="sum-rail">
+              <div className="summary-card">
+                <h3>Repo summary</h3>
+                <dl className="sumrows">
+                  <div className="sum-row">
+                    <dt className="k">Repo</dt>
+                    <dd className="v" title={importUrl}>
+                      {analysis.repoTitle}
+                    </dd>
+                  </div>
+                  <div className="sum-row">
+                    <dt className="k">Branch</dt>
+                    <dd className="v">{analysis.defaultBranch}</dd>
+                  </div>
+                  <div className="sum-row">
+                    <dt className="k">Files analyzed</dt>
+                    <dd className="v">{analysis.files.length}</dd>
+                  </div>
+                  <div className="sum-row">
+                    <dt className="k">Deploy target</dt>
+                    <dd className="v">
+                      {analysis.plan.deployKind === "pages"
+                        ? "Cloudflare Pages"
+                        : "Cloudflare Workers"}
+                    </dd>
+                  </div>
+                </dl>
               </div>
             </div>
           </div>
         )}
-      </>
+      </div>
     );
   }
 
-  if (step === 3 && selected) {
-    return (
-      <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
-        <div>
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400">
-                Deployment options
-              </h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Options below are tailored to{" "}
-                <span className="font-medium text-slate-300">{selected.name}</span>.
-              </p>
+  /* ── WIZARD SHELL ───────────────────────────────────────────────── */
+
+  const railState: Array<"on" | "done" | "off"> = [
+    step === 1 ? "on" : step > 1 ? "done" : "off",
+    step === 2 ? "on" : step > 2 ? "done" : "off",
+    step === 3 ? "on" : "off",
+  ] as const;
+
+  return (
+    <div className="wiz">
+      <aside className="card wiz-rail">
+        {WIZ_STEPS.map((s, i) => (
+          <div key={s.no}>
+            <div className={`wzn ${railState[i]}`}>
+              <span className="n">{railState[i] === "done" ? "✓" : s.no}</span>
+              <div className="wzn-tx">
+                <div className="wzn-t">{s.t}</div>
+                <div className="wzn-h">{s.h}</div>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              className="shrink-0 rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
-            >
-              ← Change template
-            </button>
+            {i < WIZ_STEPS.length - 1 && (
+              <div className={`wiz-line${railState[i] === "done" ? " done" : ""}`} />
+            )}
           </div>
+        ))}
+      </aside>
 
-          {org && (
-            <div className="mb-4 flex items-center gap-2 rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs text-slate-300">
-              <svg
-                className="h-4 w-4 shrink-0 text-[#f6821f]"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 21h18" />
-                <path d="M5 21V7l7-4 7 4v14" />
-                <path d="M9 21v-4h6v4" />
-                <path d="M9 11h6" />
-              </svg>
-              Target: <span className="font-semibold text-white">{org}</span> — the repo and its
-              deploy secrets will be created under this GitHub organization.
-            </div>
-          )}
+      <div className="wiz-body">
+        {step === 1 && (
+          <section className="wstep active">
+            <h2 className="step-title">
+              <span className="step-no">01</span> Choose a language
+            </h2>
+            <p className="step-desc">
+              Pick a language and framework — we&rsquo;ll scaffold the repo and deploy it for you.
+            </p>
 
-          <div className="space-y-4">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Project name</label>
-              <input
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                placeholder="my-api"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-              <p className="mt-1 text-[11px] text-slate-500">
-                Lowercase letters, numbers, hyphens. Used as the repo name and Cloudflare project
-                name.
-              </p>
-            </div>
-
-            {selected.requiresRoute && (
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-300">Route</label>
-                <input
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                  value={route}
-                  onChange={(e) => setRoute(e.target.value)}
-                  placeholder="*.example.com/*"
-                />
-                <p className="mt-1 text-[11px] text-slate-500">
-                  This template is deployed to a custom domain route.
+            <div
+              className="import-row"
+              onClick={() => {
+                setImportMode(true);
+                setError(null);
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  setImportMode(true);
+                  setError(null);
+                }
+              }}
+            >
+              <div className="imp-tile">{RocketIcon}</div>
+              <div className="imp-tx">
+                <h4>Deploy an existing project</h4>
+                <p>
+                  Paste a GitHub URL from an app you (or your AI) already built. Launchpad analyzes
+                  it and deploys it to Cloudflare — with nothing to configure.
                 </p>
               </div>
-            )}
-
-            <div>
-              <span className="mb-1 block text-xs font-medium text-slate-300">Visibility</span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsPrivate(true)}
-                  className={`flex-1 rounded-md border px-3 py-2 text-sm transition-colors ${
-                    isPrivate
-                      ? "border-[#f6821f] bg-slate-800 text-white"
-                      : "border-slate-700 text-slate-400 hover:border-slate-600"
-                  }`}
-                >
-                  Private
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsPrivate(false)}
-                  className={`flex-1 rounded-md border px-3 py-2 text-sm transition-colors ${
-                    !isPrivate
-                      ? "border-[#f6821f] bg-slate-800 text-white"
-                      : "border-slate-700 text-slate-400 hover:border-slate-600"
-                  }`}
-                >
-                  Public
-                </button>
-              </div>
+              <span className="new-tag">New</span>
             </div>
 
-            <div className="rounded-lg border border-slate-800 bg-slate-950/50 px-3.5 py-3">
-              <span className="mb-2 block text-xs font-medium text-slate-300">
-                Deployment profile
-              </span>
-              <dl className="space-y-1.5 text-xs">
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Platform</dt>
-                  <dd className="text-right text-slate-200">{platformLabel(selected)}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Source</dt>
-                  <dd className="text-right text-slate-200">
-                    {selected.source === "c3" ? "create-cloudflare (live)" : "Built-in"}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Runtime</dt>
-                  <dd className="text-right text-slate-200">{templateStack(selected)}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Setup</dt>
-                  <dd className="truncate font-mono text-slate-200" title={selected.deploy?.setup}>
-                    {selected.deploy?.setup ?? (selected.buildCommand || "—")}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Deploy command</dt>
-                  <dd
-                    className="truncate font-mono text-slate-200"
-                    title={selected.deploy?.command ?? selected.deployCommand}
-                  >
-                    {selected.deploy?.command ?? selected.deployCommand}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt className="text-slate-500">Files</dt>
-                  <dd className="text-slate-200">{selected.files.length}</dd>
-                </div>
-                {selected.requiresRoute && (
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Requires route</dt>
-                    <dd className="text-amber-300">Yes</dd>
+            <div className="cat-grid" style={{ marginTop: 20 }}>
+              {CATEGORIES.map((cat) => {
+                const count = templates.filter((t) => t.category === cat.id).length;
+                return (
+                  <div key={cat.id} className="card cat-card" onClick={() => resetToCategory(cat.id)}>
+                    <div className="cat-ico">{CAT_ICON}</div>
+                    <h3 className="cat-name">{cat.label}</h3>
+                    <p className="cat-desc">{cat.description}</p>
+                    <span className="cat-count">
+                      {count} template{count === 1 ? "" : "s"}
+                    </span>
                   </div>
-                )}
-              </dl>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {step === 2 && (
+          <section className="wstep active">
+            <h2 className="step-title">
+              <span className="step-no">02</span> Choose a template
+            </h2>
+            <p className="step-desc">
+              {CATEGORIES.find((c) => c.id === category)?.label} templates ready to launch.
+            </p>
+
+            <div className="tpl-grid">
+              {categoryTemplates.map((t) => (
+                <div
+                  key={t.id}
+                  className={`card tpl-card${selected?.id === t.id ? " sel" : ""}`}
+                  onClick={() => {
+                    setSelected(t);
+                    setStep(3);
+                  }}
+                >
+                  <span className="tpl-check">{CheckIcon}</span>
+                  <div className="tpl-top">
+                    <h3>{t.name}</h3>
+                    <span className="plat-chip">{platformLabel(t)}</span>
+                  </div>
+                  <p className="tpl-desc">{t.description}</p>
+                  <div className="tag-row">
+                    {t.source === "c3" && <span className="tag c3">create-cloudflare</span>}
+                    <span className="tag">
+                      {CATEGORIES.find((c) => c.id === t.category)?.label ?? t.category}
+                    </span>
+                    {t.deploy?.runtime && <span className="tag">{t.deploy.runtime}</span>}
+                    {t.buildCommand && <span className="tag">build</span>}
+                  </div>
+                  <div className="tpl-foot">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetails(t);
+                      }}
+                      className="btn outline sm"
+                    >
+                      View details
+                    </button>
+                    <span className="tpl-go">Use template →</span>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">
-                GitHub Personal Access Token
-              </label>
-              <input
-                type="password"
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                value={githubPat}
-                onChange={(e) => setGithubPat(e.target.value)}
-                placeholder={envPatSet ? "Set via .env (optional here)" : "ghp_... (scopes: repo, workflow)"}
-                autoComplete="off"
-              />
-              <p className="mt-1 text-[11px] text-slate-500">
-                {envPatSet
-                  ? "A token from .env is available; this field is optional."
-                  : "Needs repo + workflow scopes. Used only to create the repo and push — never stored."}
-              </p>
+            <div
+              style={{
+                marginTop: 20,
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="btn ghost sm"
+              >
+                ← Change language
+              </button>
             </div>
 
-            {isAmplify ? (
-              <div className="rounded-lg border border-amber-800 bg-amber-950/40 p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="h-5 w-5 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 8v4M12 16h.01" />
-                  </svg>
-                  <span className="text-sm font-semibold text-amber-300">Coming Soon</span>
-                </div>
-                <p className="text-xs text-amber-200">
-                  AWS Amplify Gen 2 deploy requires a pre-connected Amplify Console app.
-                  This template will be available once full automation is implemented.
-                </p>
-              </div>
-            ) : selected.provider === "aws" ? (
-              <>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    AWS Access Key ID
-                  </label>
-                  <input
-                    type="password"
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                    value={awsAccessKey}
-                    onChange={(e) => setAwsAccessKey(e.target.value)}
-                    placeholder={envAwsAccessKeySet ? "Set via .env (optional here)" : "AKIA..."}
-                    autoComplete="off"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    AWS Secret Access Key
-                  </label>
-                  <input
-                    type="password"
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                    value={awsSecretKey}
-                    onChange={(e) => setAwsSecretKey(e.target.value)}
-                    placeholder={envAwsSecretKeySet ? "Set via .env (optional here)" : "Your AWS secret key"}
-                    autoComplete="off"
-                  />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Stored as GitHub repo secrets for the deploy workflow.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">AWS Region</label>
-                  <input
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                    value={awsRegion}
-                    onChange={(e) => setAwsRegion(e.target.value)}
-                    placeholder="us-east-1"
-                    autoComplete="off"
-                  />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Leave blank to use the configured default region.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Cloudflare API token
-                  </label>
-                  <input
-                    type="password"
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                    value={cloudflareToken}
-                    onChange={(e) => setCloudflareToken(e.target.value)}
-                    placeholder={envTokenSet ? "Set via .env (optional here)" : "Enter your Cloudflare API token"}
-                    autoComplete="off"
-                  />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Stored as a GitHub repo secret for the deploy workflow.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
-                    Cloudflare account ID
-                  </label>
-                  <input
-                    className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                    value={accountId}
-                    onChange={(e) => setAccountId(e.target.value)}
-                    placeholder="Your 32-char Cloudflare account ID"
-                    autoComplete="off"
-                  />
-                </div>
-              </>
-            )}
-
-            {selected.provider === "cloudflare" && (
-              <div className="rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-300">Resources &amp; config</span>
-                  <span className="text-[10px] uppercase tracking-wide text-slate-500">optional</span>
-                </div>
-
-                {selected.files.some((f) => f === "wrangler.toml" || f === "wrangler.jsonc" || f === "wrangler.json") && (
-                  <div className="mb-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-[11px] font-medium text-slate-400">Bindings</span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setLaunchBindings((prev) => [...prev, { type: "kv", name: "", resource: "" }])
-                        }
-                        className="rounded-md border border-slate-700 px-2 py-1 text-[11px] font-medium text-slate-300 hover:border-slate-500 hover:text-white"
-                      >
-                        + Add binding
-                      </button>
+            {details && (
+              <div
+                className="modal show"
+                onClick={() => setDetails(null)}
+                role="dialog"
+                aria-modal="true"
+                aria-label={`${details.name} details`}
+              >
+                <div className="backdrop" onClick={() => setDetails(null)} />
+                <div className="dialog lg" onClick={(e) => e.stopPropagation()}>
+                  <div className="dlg-head">
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <h3>{details.name}</h3>
+                        <span className="plat-chip">{platformLabel(details)}</span>
+                      </div>
+                      <p>{details.description}</p>
                     </div>
-                    {launchBindings.length === 0 ? (
-                      <p className="text-[11px] text-slate-500">
-                        Add KV, D1, R2, or AI Search bindings. The resource is created on the account
-                        if it does not exist.
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {launchBindings.map((b, i) => (
-                          <div
-                            key={i}
-                            className="grid grid-cols-[92px_1fr_1fr_auto] items-center gap-2"
-                          >
-                            <select
-                              value={b.type}
-                              onChange={(e) =>
-                                setLaunchBindings((prev) =>
-                                  prev.map((row, j) =>
-                                    j === i
-                                      ? { ...row, type: e.target.value as LaunchBindingRow["type"] }
-                                      : row
-                                  )
-                                )
-                              }
-                              className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-slate-500"
-                            >
-                              {BINDING_TYPE_OPTIONS.map((o) => (
-                                <option key={o.value} value={o.value}>
-                                  {o.label}
-                                </option>
-                              ))}
-                            </select>
-                            <input
-                              value={b.name}
-                              onChange={(e) =>
-                                setLaunchBindings((prev) =>
-                                  prev.map((row, j) =>
-                                    j === i ? { ...row, name: e.target.value } : row
-                                  )
-                                )
-                              }
-                              placeholder="BINDING_NAME"
-                              className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                              autoCapitalize="none"
-                              autoCorrect="off"
-                            />
-                            <input
-                              value={b.resource}
-                              onChange={(e) =>
-                                setLaunchBindings((prev) =>
-                                  prev.map((row, j) =>
-                                    j === i ? { ...row, resource: e.target.value } : row
-                                  )
-                                )
-                              }
-                              placeholder="resource-name"
-                              className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                              autoCapitalize="none"
-                              autoCorrect="off"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setLaunchBindings((prev) => prev.filter((_, j) => j !== i))
-                              }
-                              aria-label="Remove binding"
-                              className="rounded-md border border-slate-700 px-2 py-1.5 text-xs text-slate-400 hover:border-red-800 hover:text-red-300"
-                            >
-                              ×
-                            </button>
-                          </div>
+                    <button type="button" onClick={() => setDetails(null)} aria-label="Close" className="dlg-x">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div className="dlg-body">
+                    <div className="kv-row">
+                      <span className="k">Platform</span>
+                      <span className="url-cell" style={{ flex: 1 }}>
+                        {platformLabel(details)}
+                      </span>
+                    </div>
+                    <div className="kv-row">
+                      <span className="k">Source</span>
+                      <span style={{ flex: 1 }}>
+                        {details.source === "c3" ? "create-cloudflare (live)" : "Built-in"}
+                      </span>
+                    </div>
+                    <div className="kv-row">
+                      <span className="k">Runtime</span>
+                      <span className="url-cell" style={{ flex: 1 }}>
+                        {templateStack(details)}
+                      </span>
+                    </div>
+                    <div className="kv-row">
+                      <span className="k">Setup</span>
+                      <span className="url-cell" style={{ flex: 1 }} title={details.deploy?.setup}>
+                        {details.deploy?.setup ?? (details.buildCommand || "—")}
+                      </span>
+                    </div>
+                    <div className="kv-row">
+                      <span className="k">Deploy command</span>
+                      <span
+                        className="url-cell"
+                        style={{ flex: 1 }}
+                        title={details.deploy?.command ?? details.deployCommand}
+                      >
+                        {details.deploy?.command ?? details.deployCommand}
+                      </span>
+                    </div>
+                    <div className="kv-row">
+                      <span className="k">Files</span>
+                      <span style={{ flex: 1 }}>{details.files.length}</span>
+                    </div>
+
+                    {details.c3 && (
+                      <div style={{ marginTop: 16 }}>
+                        <span className="pmute" style={{ fontSize: 12, marginBottom: 6, display: "block" }}>
+                          create-cloudflare command
+                        </span>
+                        <pre className="codebox" style={{ margin: 0 }}>
+                          npm create cloudflare@latest -- {details.c3.args.join(" ")}
+                        </pre>
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: 16 }}>
+                      <span className="pmute" style={{ fontSize: 12, marginBottom: 8, display: "block" }}>
+                        Files in template ({details.files.length})
+                      </span>
+                      <ul className="src-list">
+                        {details.files.map((f) => (
+                          <li key={f} className="fileline">
+                            <span className="url-cell" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {f}
+                            </span>
+                          </li>
                         ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="dlg-foot">
+                    <button type="button" onClick={() => setDetails(null)} className="btn ghost">
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelected(details);
+                        setDetails(null);
+                        setStep(3);
+                      }}
+                      className="btn primary"
+                    >
+                      Use this template →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {step === 3 && selected && (
+          <section className="wstep active">
+            <h2 className="step-title">
+              <span className="step-no">03</span> Deploy{" "}
+              <span className="url-cell">{selected.name}</span>
+            </h2>
+            <p className="step-desc">Set the project name, credentials, and optional config.</p>
+
+            <div className="config-split">
+              <div className="flex flex-col gap-5">
+                <div className="card form-sec">
+                  {org && (
+                    <div className="callout target" style={{ marginTop: 0, marginBottom: 18 }}>
+                      {BldgIcon}
+                      <div>
+                        Target: <code>{org}</code> — the repo and its deploy secrets will be created
+                        under this GitHub organization.
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="form-grid">
+                    <div className="field" style={{ gridColumn: "1/-1" }}>
+                      <label>Project name</label>
+                      <input
+                        className="input"
+                        value={projectName}
+                        onChange={(e) => setProjectName(e.target.value)}
+                        placeholder="my-api"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                      />
+                      <span className="help">
+                        Lowercase letters, numbers, hyphens. Used as the repo name and Cloudflare
+                        project name.
+                      </span>
+                    </div>
+
+                    {selected.requiresRoute && (
+                      <div className="field" style={{ gridColumn: "1/-1" }}>
+                        <label>Route</label>
+                        <input
+                          className="input"
+                          value={route}
+                          onChange={(e) => setRoute(e.target.value)}
+                          placeholder="*.example.com/*"
+                        />
+                        <span className="help">This template is deployed to a custom domain route.</span>
+                      </div>
+                    )}
+
+                    <div className="seg-wrap">
+                      <span className="fieldset-div">Visibility</span>
+                      <div className="seg">
+                        <button
+                          type="button"
+                          className={isPrivate ? "on" : ""}
+                          onClick={() => setIsPrivate(true)}
+                        >
+                          Private
+                        </button>
+                        <button
+                          type="button"
+                          className={!isPrivate ? "on" : ""}
+                          onClick={() => setIsPrivate(false)}
+                        >
+                          Public
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="field" style={{ gridColumn: "1/-1" }}>
+                      <label>GitHub Personal Access Token</label>
+                      <input
+                        type="password"
+                        className="input"
+                        value={githubPat}
+                        onChange={(e) => setGithubPat(e.target.value)}
+                        placeholder={envPatSet ? "Set via .env (optional here)" : "ghp_... (scopes: repo, workflow)"}
+                        autoComplete="off"
+                      />
+                      <span className="help">
+                        {envPatSet
+                          ? "A token from .env is available; this field is optional."
+                          : "Needs repo + workflow scopes. Used only to create the repo and push — never stored."}
+                      </span>
+                    </div>
+
+                    {isAmplify ? (
+                      <div className="callout warn" style={{ gridColumn: "1/-1" }}>
+                        {WarnIcon}
+                        <div>
+                          <div className="callout-t">Coming soon</div>
+                          AWS Amplify Gen 2 deploy requires a pre-connected Amplify Console app.
+                          This template will be available once full automation is implemented.
+                        </div>
+                      </div>
+                    ) : selected.provider === "aws" ? (
+                      <>
+                        <div className="field">
+                          <label>AWS Access Key ID</label>
+                          <input
+                            type="password"
+                            className="input"
+                            value={awsAccessKey}
+                            onChange={(e) => setAwsAccessKey(e.target.value)}
+                            placeholder={envAwsAccessKeySet ? "Set via .env (optional here)" : "AKIA..."}
+                            autoComplete="off"
+                          />
+                        </div>
+                        <div className="field">
+                          <label>AWS Secret Access Key</label>
+                          <input
+                            type="password"
+                            className="input"
+                            value={awsSecretKey}
+                            onChange={(e) => setAwsSecretKey(e.target.value)}
+                            placeholder={envAwsSecretKeySet ? "Set via .env (optional here)" : "Your AWS secret key"}
+                            autoComplete="off"
+                          />
+                          <span className="help">Stored as GitHub repo secrets for the deploy workflow.</span>
+                        </div>
+                        <div className="field" style={{ gridColumn: "1/-1" }}>
+                          <label>AWS Region</label>
+                          <input
+                            className="input"
+                            value={awsRegion}
+                            onChange={(e) => setAwsRegion(e.target.value)}
+                            placeholder="us-east-1"
+                            autoComplete="off"
+                          />
+                          <span className="help">Leave blank to use the configured default region.</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="field" style={{ gridColumn: "1/-1" }}>
+                          <label>Cloudflare API token</label>
+                          <input
+                            type="password"
+                            className="input"
+                            value={cloudflareToken}
+                            onChange={(e) => setCloudflareToken(e.target.value)}
+                            placeholder={envTokenSet ? "Set via .env (optional here)" : "Enter your Cloudflare API token"}
+                            autoComplete="off"
+                          />
+                          <span className="help">
+                            Stored as a GitHub repo secret for the deploy workflow.
+                          </span>
+                        </div>
+                        <div className="field" style={{ gridColumn: "1/-1" }}>
+                          <label>Cloudflare account ID</label>
+                          <input
+                            className="input"
+                            value={accountId}
+                            onChange={(e) => setAccountId(e.target.value)}
+                            placeholder="Your 32-char Cloudflare account ID"
+                            autoComplete="off"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {selected.provider === "cloudflare" && (
+                  <div className="card form-sec">
+                    <div className="section-title" style={{ marginBottom: 4 }}>
+                      <div>
+                        <h3 style={{ fontSize: 15 }}>Resources &amp; config</h3>
+                        <p className="pmute">Optional — applied once the first deploy succeeds.</p>
+                      </div>
+                    </div>
+
+                    {selected.files.some(
+                      (f) => f === "wrangler.toml" || f === "wrangler.jsonc" || f === "wrangler.json"
+                    ) && (
+                      <div className="field">
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            marginBottom: 8,
+                          }}
+                        >
+                          <span className="fieldset-div" style={{ margin: 0 }}>Bindings</span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setLaunchBindings((prev) => [
+                                ...prev,
+                                { type: "kv", name: "", resource: "" },
+                              ])
+                            }
+                            className="btn outline sm"
+                          >
+                            + Add binding
+                          </button>
+                        </div>
+                        {launchBindings.length === 0 ? (
+                          <p className="pmute" style={{ fontSize: 12 }}>
+                            Add KV, D1, R2, or AI Search bindings. The resource is created on the
+                            account if it does not exist.
+                          </p>
+                        ) : (
+                          <div className="ev-rows">
+                            {launchBindings.map((b, i) => (
+                              <div key={i} className="ev-row">
+                                <select
+                                  value={b.type}
+                                  onChange={(e) =>
+                                    setLaunchBindings((prev) =>
+                                      prev.map((row, j) =>
+                                        j === i
+                                          ? { ...row, type: e.target.value as LaunchBindingRow["type"] }
+                                          : row
+                                      )
+                                    )
+                                  }
+                                  className="input"
+                                  style={{ flex: "0 0 118px" }}
+                                >
+                                  {BINDING_TYPE_OPTIONS.map((o) => (
+                                    <option key={o.value} value={o.value}>
+                                      {o.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <input
+                                  value={b.name}
+                                  onChange={(e) =>
+                                    setLaunchBindings((prev) =>
+                                      prev.map((row, j) =>
+                                        j === i ? { ...row, name: e.target.value } : row
+                                      )
+                                    )
+                                  }
+                                  placeholder="BINDING_NAME"
+                                  className="input"
+                                  autoCapitalize="none"
+                                  autoCorrect="off"
+                                />
+                                <input
+                                  value={b.resource}
+                                  onChange={(e) =>
+                                    setLaunchBindings((prev) =>
+                                      prev.map((row, j) =>
+                                        j === i ? { ...row, resource: e.target.value } : row
+                                      )
+                                    )
+                                  }
+                                  placeholder="resource-name"
+                                  className="input"
+                                  autoCapitalize="none"
+                                  autoCorrect="off"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setLaunchBindings((prev) => prev.filter((_, j) => j !== i))
+                                  }
+                                  aria-label="Remove binding"
+                                  className="btn ghost sm danger-hover"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="field">
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <span className="fieldset-div" style={{ margin: 0 }}>Environment variables</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setLaunchEnvVars((prev) => [
+                              ...prev,
+                              { key: "", value: "", kind: "secret" },
+                            ])
+                          }
+                          className="btn outline sm"
+                        >
+                          + Add variable
+                        </button>
+                      </div>
+                      {launchEnvVars.length === 0 ? (
+                        <p className="pmute" style={{ fontSize: 12 }}>
+                          Values are stored encrypted and applied to the project once the first
+                          deploy succeeds.
+                        </p>
+                      ) : (
+                        <div className="ev-rows">
+                          {launchEnvVars.map((v, i) => (
+                            <div key={i} className="ev-row">
+                              <input
+                                value={v.key}
+                                onChange={(e) =>
+                                  setLaunchEnvVars((prev) =>
+                                    prev.map((row, j) =>
+                                      j === i ? { ...row, key: e.target.value } : row
+                                    )
+                                  )
+                                }
+                                placeholder="KEY"
+                                className="input"
+                                style={{ flex: "1 1 32%" }}
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                              />
+                              <select
+                                value={v.kind}
+                                onChange={(e) =>
+                                  setLaunchEnvVars((prev) =>
+                                    prev.map((row, j) =>
+                                      j === i
+                                        ? { ...row, kind: e.target.value as LaunchEnvVarRow["kind"] }
+                                        : row
+                                    )
+                                  )
+                                }
+                                className="input"
+                                style={{ flex: "0 0 96px" }}
+                              >
+                                <option value="secret">Secret</option>
+                                <option value="text">Text</option>
+                              </select>
+                              <input
+                                type={v.kind === "secret" ? "password" : "text"}
+                                value={v.value}
+                                onChange={(e) =>
+                                  setLaunchEnvVars((prev) =>
+                                    prev.map((row, j) =>
+                                      j === i ? { ...row, value: e.target.value } : row
+                                    )
+                                  )
+                                }
+                                placeholder="value"
+                                className="input"
+                                autoComplete="off"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setLaunchEnvVars((prev) => prev.filter((_, j) => j !== i))
+                                }
+                                aria-label="Remove variable"
+                                className="btn ghost sm danger-hover"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {selected.type === "worker" && (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 10,
+                          borderTop: "1px solid var(--np-line)",
+                          paddingTop: 16,
+                        }}
+                      >
+                        <label className="check">
+                          <input
+                            type="checkbox"
+                            checked={previewEnabled}
+                            onChange={(e) => setPreviewEnabled(e.target.checked)}
+                          />
+                          Per-branch preview deployments
+                        </label>
+                        <label className="check">
+                          <input
+                            type="checkbox"
+                            checked={provisionEnabled}
+                            onChange={(e) => setProvisionEnabled(e.target.checked)}
+                          />
+                          Provisioning from pushed code
+                        </label>
                       </div>
                     )}
                   </div>
                 )}
+              </div>
 
-                <div className="mb-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[11px] font-medium text-slate-400">
-                      Environment variables
-                    </span>
+              <div className="sum-rail">
+                <div className="summary-card">
+                  <h3>Selection</h3>
+                  <dl className="sumrows">
+                    <div className="sum-row">
+                      <dt className="k">Language</dt>
+                      <dd className="v">
+                        {CATEGORIES.find((c) => c.id === selected.category)?.label}
+                      </dd>
+                    </div>
+                    <div className="sum-row">
+                      <dt className="k">Template</dt>
+                      <dd className="v">{selected.name}</dd>
+                    </div>
+                    <div className="sum-row">
+                      <dt className="k">Platform</dt>
+                      <dd className="v">{platformLabel(selected)}</dd>
+                    </div>
+                    <div className="sum-row">
+                      <dt className="k">Stack</dt>
+                      <dd className="v">{templateStack(selected)}</dd>
+                    </div>
+                    <div className="sum-row">
+                      <dt className="k">Visibility</dt>
+                      <dd className="v">{isPrivate ? "Private repo" : "Public repo"}</dd>
+                    </div>
+                    <div className="sum-row">
+                      <dt className="k">URL</dt>
+                      <dd className="v acc" title="Assigned after deploy">
+                        {selected.provider === "aws"
+                          ? selected.type === "amplify"
+                            ? "Amplify app URL"
+                            : "API Gateway URL"
+                          : selected.type === "pages"
+                            ? "<name>.pages.dev"
+                            : "<name>.<subdomain>.workers.dev"}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  {error && <div className="alert-error">{error}</div>}
+
+                  <div className="sum-card-cta">
                     <button
                       type="button"
-                      onClick={() =>
-                        setLaunchEnvVars((prev) => [...prev, { key: "", value: "", kind: "secret" }])
-                      }
-                      className="rounded-md border border-slate-700 px-2 py-1 text-[11px] font-medium text-slate-300 hover:border-slate-500 hover:text-white"
+                      onClick={handleLaunch}
+                      disabled={submitting || isAmplify}
+                      className="btn primary lg"
+                      style={{ width: "100%", justifyContent: "center" }}
                     >
-                      + Add variable
+                      {submitting
+                        ? selected.source === "c3"
+                          ? "Scaffolding with create-cloudflare, creating repo, pushing..."
+                          : "Scaffolding, creating repo, pushing..."
+                        : isAmplify
+                          ? "Coming Soon"
+                          : "Launch app"}
                     </button>
                   </div>
-                  {launchEnvVars.length === 0 ? (
-                    <p className="text-[11px] text-slate-500">
-                      Values are stored encrypted and applied to the project once the first deploy
-                      succeeds.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {launchEnvVars.map((v, i) => (
-                        <div
-                          key={i}
-                          className="grid grid-cols-[1fr_86px_1fr_auto] items-center gap-2"
-                        >
-                          <input
-                            value={v.key}
-                            onChange={(e) =>
-                              setLaunchEnvVars((prev) =>
-                                prev.map((row, j) => (j === i ? { ...row, key: e.target.value } : row))
-                              )
-                            }
-                            placeholder="KEY"
-                            className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                          />
-                          <select
-                            value={v.kind}
-                            onChange={(e) =>
-                              setLaunchEnvVars((prev) =>
-                                prev.map((row, j) =>
-                                  j === i
-                                    ? { ...row, kind: e.target.value as LaunchEnvVarRow["kind"] }
-                                    : row
-                                )
-                              )
-                            }
-                            className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 outline-none focus:border-slate-500"
-                          >
-                            <option value="secret">Secret</option>
-                            <option value="text">Text</option>
-                          </select>
-                          <input
-                            type={v.kind === "secret" ? "password" : "text"}
-                            value={v.value}
-                            onChange={(e) =>
-                              setLaunchEnvVars((prev) =>
-                                prev.map((row, j) =>
-                                  j === i ? { ...row, value: e.target.value } : row
-                                )
-                              )
-                            }
-                            placeholder="value"
-                            className="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
-                            autoComplete="off"
-                          />
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setLaunchEnvVars((prev) => prev.filter((_, j) => j !== i))
-                            }
-                            aria-label="Remove variable"
-                            className="rounded-md border border-slate-700 px-2 py-1.5 text-xs text-slate-400 hover:border-red-800 hover:text-red-300"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div className="sum-card-ts">
+                    <span className="status-dot ok" />
+                    Auto-deploys on every push to {selected.type === "pages" ? "your branch" : "main"}.
+                  </div>
                 </div>
 
-                {selected.type === "worker" && (
-                  <div className="space-y-2 border-t border-slate-800 pt-3">
-                    <label className="flex items-center gap-2 text-xs text-slate-300">
-                      <input
-                        type="checkbox"
-                        checked={previewEnabled}
-                        onChange={(e) => setPreviewEnabled(e.target.checked)}
-                        className="h-3.5 w-3.5 rounded border-slate-600"
-                      />
-                      Per-branch preview deployments
-                    </label>
-                    <label className="flex items-center gap-2 text-xs text-slate-300">
-                      <input
-                        type="checkbox"
-                        checked={provisionEnabled}
-                        onChange={(e) => setProvisionEnabled(e.target.checked)}
-                        className="h-3.5 w-3.5 rounded border-slate-600"
-                      />
-                      Provisioning from pushed code
-                    </label>
-                  </div>
-                )}
+                <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="btn ghost sm"
+                    style={{ flex: 1 }}
+                  >
+                    Change language
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="btn ghost sm"
+                    style={{ flex: 1 }}
+                  >
+                    Change template
+                  </button>
+                </div>
               </div>
-            )}
-
-            {error && (
-              <div className="rounded-md border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handleLaunch}
-              disabled={submitting || isAmplify}
-              className={isAmplify
-                ? "w-full rounded-md px-4 py-2.5 text-sm font-semibold transition-colors bg-slate-700 text-slate-400 cursor-not-allowed"
-                : "w-full rounded-md px-4 py-2.5 text-sm font-semibold transition-colors bg-[#f6821f] text-slate-950 hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-60"
-              }
-            >
-              {submitting
-                ? selected.source === "c3"
-                  ? "Scaffolding with create-cloudflare, creating repo, pushing..."
-                  : "Scaffolding, creating repo, pushing..."
-                : isAmplify
-                  ? "Coming Soon"
-                  : "Launch app"}              </button>
-          </div>
-        </div>
-
-        <div className="lg:sticky lg:top-8 lg:self-start">
-          <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-            <h2 className="mb-4 text-sm font-medium uppercase tracking-wide text-slate-400">
-              Selection
-            </h2>
-            <dl className="space-y-3 text-xs">
-              <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">Language</dt>
-                <dd className="text-slate-200">
-                  {CATEGORIES.find((c) => c.id === selected.category)?.label}
-                </dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">Template</dt>
-                <dd className="text-right text-slate-200">{selected.name}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">Platform</dt>
-                <dd className="text-slate-200">{platformLabel(selected)}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">Stack</dt>
-                <dd className="text-slate-200">{templateStack(selected)}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-slate-500">URL</dt>
-                <dd className="truncate font-mono text-slate-300" title="Assigned after deploy">
-                  {selected.provider === "aws"
-                    ? selected.type === "amplify"
-                      ? "Amplify app URL"
-                      : "API Gateway URL"
-                    : selected.type === "pages"
-                      ? "<name>.pages.dev"
-                      : "<name>.<subdomain>.workers.dev"}
-                </dd>
-              </div>
-            </dl>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="flex-1 rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
-              >
-                Change language
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="flex-1 rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 hover:border-slate-500 hover:text-white"
-              >
-                Change template
-              </button>
             </div>
-          </div>
-        </div>
+          </section>
+        )}
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }

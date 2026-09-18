@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { DeployTarget } from "@/lib/types";
-import { Badge, Card, CardHeader } from "./ui";
+import { Card, CardHeader } from "./ui";
 
 interface ProvisionPanelProps {
   projectId: string;
@@ -73,9 +73,11 @@ export default function ProvisionPanel({ projectId, projectType }: ProvisionPane
     return (
       <Card>
         <CardHeader title="Provisioning from code" />
-        <p className="px-5 pb-5 text-sm text-slate-500">
-          Provisioning from pushed code is not supported for Pages projects.
-        </p>
+        <div className="card-bd">
+          <p className="pmute">
+            Provisioning from pushed code is not supported for Pages projects.
+          </p>
+        </div>
       </Card>
     );
   }
@@ -85,58 +87,55 @@ export default function ProvisionPanel({ projectId, projectType }: ProvisionPane
       <CardHeader
         title="Provisioning from code"
         action={
-          <Badge
-            className={
-              enabled ? "bg-emerald-500/15 text-emerald-300" : "bg-slate-700/30 text-slate-400"
-            }
-          >
+          <span className={`pill${enabled ? " ok" : " flat"}`}>
+            <span className="dot" />
             {enabled ? "Enabled" : "Disabled"}
-          </Badge>
+          </span>
         }
       />
 
       {error && (
-        <div className="mx-5 mt-4 rounded-md border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
+        <div className="alert-error" style={{ margin: "0 18px", marginTop: 14 }}>
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="mx-5 mt-4 rounded-md border border-sky-800/50 bg-sky-950/30 px-3 py-2 text-xs text-sky-300">
+        <div className="alert-ok" style={{ margin: "0 18px", marginTop: 14 }}>
           {notice}
         </div>
       )}
 
-      <div className="px-5 py-4">
+      <div style={{ padding: "16px 18px" }}>
         {!loaded ? (
-          <p className="text-sm text-slate-500">Loading…</p>
+          <p className="pmute">Loading…</p>
         ) : (
           <>
-            <p className="mb-4 text-sm text-slate-500">
-              Provision resources by editing files and pushing, without using Launchpad. KV, D1 and
-              R2 bindings without IDs are created automatically on <code className="font-mono text-xs">wrangler deploy</code>.
-              AI Search instances and Turnstile widgets are created by a provision step before deploy.
+            <p className="pmute" style={{ marginBottom: 14, lineHeight: 1.55 }}>
+              Provision resources by editing files and pushing, without using Launchpad. KV, D1
+              and R2 bindings without IDs are created automatically on{" "}
+              <code style={{ fontFamily: "var(--font-mono)", color: "var(--np-teal-700)" }}>
+                wrangler deploy
+              </code>
+              . AI Search instances and Turnstile widgets are created by a provision step before
+              deploy.
             </p>
 
             <button
               type="button"
               onClick={() => toggle(!enabled)}
               disabled={busy}
-              className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                enabled
-                  ? "border border-slate-700 text-slate-300 hover:border-red-700 hover:text-red-300"
-                  : "bg-[#f6821f] text-slate-950 hover:bg-[#ff9436]"
-              }`}
+              className={`btn${enabled ? " danger" : " primary"}`}
             >
-              {busy ? "…" : enabled ? "Disable" : "Enable provisioning"}
+              {busy ? "…" : enabled ? "Disable provisioning" : "Enable provisioning"}
             </button>
           </>
         )}
       </div>
 
-      <div className="mx-5 mb-5 rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2 font-mono text-xs text-slate-500">
-        <span className="text-slate-400">[[kv_namespaces]]</span> binding = &quot;CACHE&quot;{" "}
-        <span className="text-slate-600"># no id → created on push</span>
+      <div className="codebox" style={{ margin: "0 18px 18px" }}>
+        <span className="c">[[kv_namespaces]]</span> binding = &quot;CACHE&quot;{" "}
+        <span className="dim"># no id → created on push</span>
       </div>
     </Card>
   );

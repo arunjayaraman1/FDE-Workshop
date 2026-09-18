@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ProjectRole, SiteAccessMode } from "@/lib/types";
 import { Card, CardHeader, CopyButton, IconKey } from "./ui";
+import Skeleton from "./skeleton";
 
 interface AccessPanelProps {
   projectId: string;
@@ -65,10 +66,7 @@ export default function AccessPanel({
   }, [projectId]);
 
   useEffect(() => {
-    const tick = async () => {
-      await load();
-    };
-    void tick();
+    void load();
   }, [load]);
 
   async function save(nextMode: SiteAccessMode, rotate = false) {
@@ -110,12 +108,12 @@ export default function AccessPanel({
   if (loading) {
     return (
       <Card>
-        <CardHeader icon={<IconKey className="h-4 w-4 text-slate-400" />} title="Site access" />
-        <div className="px-5 py-4">
-          <div className="h-4 w-48 animate-pulse rounded bg-slate-800" />
-          <div className="mt-3 space-y-2">
-            <div className="h-16 animate-pulse rounded-lg bg-slate-800/70" />
-            <div className="h-16 animate-pulse rounded-lg bg-slate-800/70" />
+        <CardHeader icon={<IconKey className="icon" />} title="Site access" />
+        <div className="card-bd">
+          <Skeleton className="h-4 w-48" />
+          <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
           </div>
         </div>
       </Card>
@@ -125,9 +123,9 @@ export default function AccessPanel({
   if (!saved || !saved.supported) {
     return (
       <Card>
-        <CardHeader icon={<IconKey className="h-4 w-4 text-slate-400" />} title="Site access" />
-        <div className="px-5 py-4">
-          <p className="text-sm text-slate-400">
+        <CardHeader icon={<IconKey className="icon" />} title="Site access" />
+        <div className="card-bd">
+          <p className="pmute">
             {saved?.unsupportedReason ?? "Site access isn't supported for this template yet."}
           </p>
         </div>
@@ -139,54 +137,39 @@ export default function AccessPanel({
   const pending = selected !== saved.mode;
 
   return (
-    <div className="space-y-4">
+    <div className="set-grid">
       {(error || notice) && (
-        <div className="space-y-2">
-          {error && (
-            <div className="rounded-xl border border-red-800/50 bg-red-950/25 px-4 py-3 text-sm text-red-300">
-              {error}
-            </div>
-          )}
-          {notice && (
-            <div className="rounded-xl border border-sky-800/50 bg-sky-950/25 px-4 py-3 text-sm text-sky-300">
-              {notice}
-            </div>
-          )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {error && <div className="alert-error">{error}</div>}
+          {notice && <div className="alert-ok">{notice}</div>}
         </div>
       )}
 
       <Card>
-        <CardHeader icon={<IconKey className="h-4 w-4 text-slate-400" />} title="Site access" />
-        <div className="space-y-4 px-5 py-4">
-          <p className="text-sm text-slate-400">
+        <CardHeader icon={<IconKey className="icon" />} title="Site access" />
+        <div className="card-bd">
+          <p className="pmute" style={{ marginBottom: 14, lineHeight: 1.55 }}>
             Lock the deployed prototype with a shared access key. Visitors enter the key in the
             browser&apos;s login prompt; the deployed site handles the check, so preview branches
             are protected too. Takes effect on the next auto-deploy (~1 minute).
           </p>
 
-          <div className="space-y-2">
+          <div className="seg-rows">
             {MODES.map((m) => (
-              <label
+              <button
                 key={m.value}
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-                  selected === m.value
-                    ? "border-[#f6821f]/50 bg-[#f6821f]/5"
-                    : "border-slate-800 hover:border-slate-700"
-                }`}
+                type="button"
+                disabled={!canManage || saving}
+                onClick={() => setSelected(m.value)}
+                className={`seg-row${selected === m.value ? " on" : ""}`}
+                style={{ textAlign: "left" }}
               >
-                <input
-                  type="radio"
-                  name="site-access"
-                  checked={selected === m.value}
-                  disabled={!canManage || saving}
-                  onChange={() => setSelected(m.value)}
-                  className="mt-0.5 accent-[#f6821f]"
-                />
-                <span>
-                  <span className="font-medium text-slate-200">{m.label}</span>
-                  <span className="block text-xs text-slate-500">{m.hint}</span>
+                <span className="s-radio" />
+                <span className="s-tx">
+                  <span className="s-t">{m.label}</span>
+                  <span className="s-d">{m.hint}</span>
                 </span>
-              </label>
+              </button>
             ))}
           </div>
         </div>
@@ -194,15 +177,15 @@ export default function AccessPanel({
 
       {showKey && (
         <Card>
-          <CardHeader icon={<IconKey className="h-4 w-4 text-slate-400" />} title="Access key" />
-          <div className="space-y-3 px-5 py-4">
-            <div className="flex items-center justify-between gap-4">
-              <code className="min-w-0 truncate rounded-md border border-slate-800 bg-slate-950 px-3 py-2 font-mono text-sm text-[#f6821f]">
-                {saved.key}
-              </code>
+          <CardHeader icon={<IconKey className="icon" />} title="Access key" />
+          <div className="card-bd">
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <div className="key-chip" style={{ flex: 1, minWidth: 0 }}>
+                <span className="truncate">{saved.key}</span>
+              </div>
               <CopyButton text={saved.key ?? ""} />
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="pmute" style={{ marginTop: 12 }}>
               Share this key with {saved.mode === "members" ? "project members" : "your organization"}.
               {saved.mode === "members" &&
                 " Removing a member doesn't revoke them automatically — rotate to revoke."}
@@ -212,18 +195,18 @@ export default function AccessPanel({
       )}
 
       {!canManage && saved.mode === "org" && (
-        <p className="text-sm text-slate-500">
+        <p className="pmute">
           This site uses an organization access key. Ask a project owner for the shared key.
         </p>
       )}
 
       {canManage && (
-        <div className="flex flex-wrap items-center gap-3">
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           {pending ? (
             <button
               onClick={() => save(selected)}
               disabled={saving}
-              className="rounded-lg bg-[#f6821f] px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn primary"
             >
               {saving ? "Applying…" : "Apply"}
             </button>
@@ -231,7 +214,7 @@ export default function AccessPanel({
             <button
               onClick={() => save("org")}
               disabled={saving}
-              className="rounded-lg bg-[#f6821f] px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn primary"
             >
               Protect this site
             </button>
@@ -240,14 +223,14 @@ export default function AccessPanel({
               <button
                 onClick={() => save(saved.mode, true)}
                 disabled={saving || rotating}
-                className="rounded-lg border border-slate-700 bg-slate-800/60 px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700/60 disabled:opacity-50"
+                className="btn outline"
               >
                 {rotating ? "Rotating…" : "Rotate key"}
               </button>
               <button
                 onClick={() => save("public")}
                 disabled={saving}
-                className="rounded-lg border border-slate-700 bg-slate-800/60 px-4 py-2 text-sm text-slate-200 transition-colors hover:bg-slate-700/60 disabled:opacity-50"
+                className="btn outline"
               >
                 Make public
               </button>
@@ -255,8 +238,9 @@ export default function AccessPanel({
           )}
         </div>
       )}
-      <p className="text-[11px] text-slate-600">
-        Project name shown to visitors: <span className="text-slate-400">{projectName}</span>
+      <p className="pmute" style={{ fontSize: 11.5 }}>
+        Project name shown to visitors:{" "}
+        <span style={{ color: "var(--text-2)", fontWeight: 600 }}>{projectName}</span>
       </p>
     </div>
   );

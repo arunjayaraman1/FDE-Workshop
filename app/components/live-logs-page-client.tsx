@@ -66,30 +66,30 @@ function describeUrl(url: string): string {
   }
 }
 
-const OUTCOME_COLOR: Record<string, string> = {
-  ok: "bg-emerald-500/20 text-emerald-300",
-  error: "bg-red-500/20 text-red-300",
-  canceled: "bg-slate-500/20 text-slate-400",
-  exceededCpu: "bg-red-500/20 text-red-300",
-  unknown: "bg-amber-500/20 text-amber-300",
+const OUTCOME_STYLE: Record<string, { bg: string; fg: string }> = {
+  ok: { bg: "rgba(12,138,92,0.25)", fg: "#7fdab4" },
+  error: { bg: "rgba(179,38,30,0.3)", fg: "#f09b93" },
+  canceled: { bg: "rgba(8,189,184,0.16)", fg: "#7fb5ae" },
+  exceededCpu: { bg: "rgba(179,38,30,0.3)", fg: "#f09b93" },
+  unknown: { bg: "rgba(150,107,3,0.25)", fg: "#e8c478" },
 };
 
-const LEVEL_COLOR: Record<string, string> = {
-  log: "text-slate-300",
-  info: "text-sky-300",
-  debug: "text-slate-500",
-  warn: "text-amber-300",
-  error: "text-red-300",
+const LEVEL_STYLE: Record<string, string> = {
+  log: "#a8d8d1",
+  info: "#7fd3ed",
+  debug: "#5c8b85",
+  warn: "#e8c478",
+  error: "#f09b93",
 };
 
-const METHOD_COLOR: Record<string, string> = {
-  GET: "text-emerald-400",
-  HEAD: "text-slate-400",
-  POST: "text-amber-400",
-  PUT: "text-sky-400",
-  PATCH: "text-sky-400",
-  DELETE: "text-red-400",
-  OPTIONS: "text-slate-400",
+const METHOD_STYLE: Record<string, string> = {
+  GET: "#7fdab4",
+  HEAD: "#7fb5ae",
+  POST: "#e8c478",
+  PUT: "#7fd3ed",
+  PATCH: "#7fd3ed",
+  DELETE: "#f09b93",
+  OPTIONS: "#7fb5ae",
 };
 
 // Static branch list – in a real scenario you could fetch from GitHub API
@@ -105,7 +105,6 @@ export default function LiveLogsPageClient({ projectId, projectName }: LiveLogsP
   const controllerRef = useRef<AbortController | null>(null);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll
   useEffect(() => {
     const el = scrollerRef.current;
     if (el && autoScroll) el.scrollTop = el.scrollHeight;
@@ -216,7 +215,6 @@ export default function LiveLogsPageClient({ projectId, projectName }: LiveLogsP
     }
   }, [projectId, stop]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => { controllerRef.current?.abort(); };
   }, []);
@@ -238,49 +236,59 @@ export default function LiveLogsPageClient({ projectId, projectName }: LiveLogsP
   }
 
   return (
-    <div className="fixed inset-y-0 right-0 left-0 top-16 lg:top-0 lg:left-[var(--sidebar-w,16rem)] z-20 flex flex-col bg-[#040a14]">
+    <div
+      className="fixed inset-y-0 right-0 left-0 top-16 lg:top-0 lg:left-[var(--sidebar-w,16rem)] z-20 flex flex-col"
+      style={{ background: "#042422" }}
+    >
       {/* ── Top bar ── */}
-      <div className="flex items-center justify-between border-b border-slate-800/70 bg-[#080f1e] px-6 py-3.5">
+      <div
+        className="flex items-center justify-between border-b px-6 py-3.5"
+        style={{ borderColor: "rgba(8,189,184,0.18)", background: "#06302e" }}
+      >
         <div className="flex items-center gap-4">
           <Link
             href={`/projects/${projectId}`}
-            className="flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-slate-200"
+            className="flex items-center gap-2 text-sm transition-colors hover:brightness-125"
+            style={{ color: "#7fb5ae" }}
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Back to project
           </Link>
-          <span className="h-5 w-px bg-slate-800" />
+          <span className="h-5 w-px" style={{ background: "rgba(8,189,184,0.18)" }} />
           <div className="flex items-center gap-2.5">
-            <svg className="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg className="h-4 w-4" style={{ color: "#7fb5ae" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 17l6-5-6-5" /><path d="M12 19h8" />
             </svg>
-            <span className="text-sm font-semibold text-slate-200">Live Logs</span>
-            <span className="rounded-md border border-[#f6821f]/25 bg-[#f6821f]/10 px-2 py-0.5 font-mono text-[11px] text-[#f6821f]">
+            <span className="text-sm font-semibold" style={{ color: "#d7f0ec" }}>Live Logs</span>
+            <span
+              className="rounded-md border px-2 py-0.5 font-mono text-[11px]"
+              style={{ borderColor: "rgba(8,189,184,0.35)", background: "rgba(8,189,184,0.1)", color: "#7fdad7" }}
+            >
               {projectName}
             </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Connection indicator */}
           {streaming && (
             <div className="flex items-center gap-2 font-mono text-xs">
               <span
-                className={`h-2 w-2 rounded-full ${
-                  connected ? "animate-pulse bg-emerald-400" : "bg-slate-600"
-                }`}
+                className={`h-2 w-2 rounded-full ${connected ? "animate-pulse" : ""}`}
+                style={{
+                  background: connected ? "#63c9a4" : "#5c8b85",
+                  boxShadow: connected ? "0 0 7px rgba(99,201,164,0.7)" : "none",
+                }}
               />
-              <span className={connected ? "text-emerald-300" : "text-slate-500"}>
+              <span style={{ color: connected ? "#7fdab4" : "#7fb5ae" }}>
                 {connected ? "LISTENING" : "CONNECTING…"}
               </span>
             </div>
           )}
 
-          {/* Branch selector */}
           <div className="flex items-center gap-2">
-            <svg className="h-3.5 w-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg className="h-3.5 w-3.5" style={{ color: "#5c8b85" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
             </svg>
             <select
@@ -288,7 +296,12 @@ export default function LiveLogsPageClient({ projectId, projectName }: LiveLogsP
               value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
               disabled={streaming}
-              className="rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-1.5 font-mono text-xs text-slate-200 outline-none transition-colors hover:border-slate-600 focus:border-[#f6821f]/50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border px-3 py-1.5 font-mono text-xs outline-none transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+              style={{
+                borderColor: "rgba(8,189,184,0.25)",
+                background: "#06302e",
+                color: "#a8d8d1",
+              }}
             >
               {BRANCHES.map((b) => (
                 <option key={b} value={b}>{b}</option>
@@ -296,17 +309,13 @@ export default function LiveLogsPageClient({ projectId, projectName }: LiveLogsP
             </select>
           </div>
 
-          {/* Connect / Stop */}
           {streaming ? (
             <button
               type="button"
               id="live-logs-stop-btn"
               onClick={stop}
-              className="inline-flex items-center gap-2 rounded-lg border border-red-700/50 bg-red-500/10 px-4 py-1.5 text-sm font-semibold text-red-300 transition-all hover:border-red-600 hover:bg-red-500/15"
+              className="btn danger"
             >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="6" width="12" height="12" rx="1" />
-              </svg>
               Stop
             </button>
           ) : (
@@ -314,106 +323,125 @@ export default function LiveLogsPageClient({ projectId, projectName }: LiveLogsP
               type="button"
               id="live-logs-connect-btn"
               onClick={() => void start()}
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-[#f6821f] to-[#c06010] px-4 py-1.5 text-sm font-semibold text-white shadow-[0_2px_12px_rgba(246,130,31,0.3)] transition-all hover:from-[#ff9436] hover:to-[#d07020] hover:shadow-[0_4px_20px_rgba(246,130,31,0.45)]"
+              className="btn primary"
             >
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
               Connect
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Error banner ── */}
       {error && (
-        <div className="mx-6 mt-4 rounded-lg border border-amber-700/40 bg-amber-950/30 px-4 py-3 font-mono text-xs text-amber-300">
+        <div
+          className="mx-6 mt-4 rounded-lg border px-4 py-3 font-mono text-xs"
+          style={{
+            borderColor: "rgba(150,107,3,0.4)",
+            background: "rgba(150,107,3,0.12)",
+            color: "#e8c478",
+          }}
+        >
           {error}
         </div>
       )}
 
-      {/* ── Terminal body ── */}
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto bg-[#060d1a] px-6 py-5 font-mono text-xs leading-relaxed"
+        className="flex-1 overflow-y-auto px-6 py-5 font-mono text-xs leading-relaxed"
+        style={{ background: "#042422" }}
       >
         {entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <svg className="h-8 w-8 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+            <svg className="h-8 w-8" style={{ color: "#3e6b64" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 17l6-5-6-5" /><path d="M12 19h8" />
             </svg>
-            <p className="text-slate-600">
+            <p style={{ color: "#5c8b85" }}>
               {streaming
                 ? "Waiting for requests… send a request to your worker and it will appear here."
                 : `Select a branch and click Connect to start streaming live logs from ${projectName}.`}
             </p>
           </div>
         ) : (
-          entries.map((e) => (
-            <div
-              key={e.id}
-              className="group mb-4 border-b border-slate-800/40 pb-3 last:border-0 last:pb-0"
-            >
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="text-slate-700">{e.at}</span>
-                <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                    OUTCOME_COLOR[e.outcome] ?? OUTCOME_COLOR.unknown
-                  }`}
-                >
-                  {e.outcome}
-                </span>
-                {e.method && (
-                  <span className={`font-bold ${METHOD_COLOR[e.method] ?? "text-slate-300"}`}>
-                    {e.method}
+          entries.map((e) => {
+            const os = OUTCOME_STYLE[e.outcome] ?? OUTCOME_STYLE.unknown;
+            return (
+              <div
+                key={e.id}
+                className="group mb-4 border-b pb-3 last:border-0 last:pb-0"
+                style={{ borderColor: "rgba(8,189,184,0.12)" }}
+              >
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span style={{ color: "#5c8b85" }}>{e.at}</span>
+                  <span
+                    className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                    style={{ background: os.bg, color: os.fg }}
+                  >
+                    {e.outcome}
                   </span>
-                )}
-                {e.url && <span className="text-slate-400">{e.url}</span>}
-                <button
-                  type="button"
-                  onClick={() => void handleCopyEntry(e)}
-                  className="ml-auto hidden rounded border border-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 transition-colors hover:border-slate-600 hover:text-slate-300 group-hover:inline-flex"
-                >
-                  Copy
-                </button>
-              </div>
-              {e.logs.length > 0 &&
-                e.logs.map((l, i) => (
-                  <div key={i} className="mt-1 pl-2">
-                    <span className={`font-semibold ${LEVEL_COLOR[l.level] ?? "text-slate-300"}`}>
-                      [{l.level}]
-                    </span>{" "}
-                    <span className="text-slate-200">{l.text}</span>
+                  {e.method && (
+                    <span className="font-bold" style={{ color: METHOD_STYLE[e.method] ?? "#a8d8d1" }}>
+                      {e.method}
+                    </span>
+                  )}
+                  {e.url && (
+                    <span style={{ color: "#a8d8d1" }}>{e.url}</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyEntry(e)}
+                    className="ml-auto hidden rounded border px-1.5 py-0.5 text-[10px] transition-colors group-hover:inline-flex"
+                    style={{ borderColor: "rgba(8,189,184,0.25)", color: "#7fb5ae" }}
+                  >
+                    Copy
+                  </button>
+                </div>
+                {e.logs.length > 0 &&
+                  e.logs.map((l, i) => (
+                    <div key={i} className="mt-1 pl-2">
+                      <span className="font-semibold" style={{ color: LEVEL_STYLE[l.level] ?? "#a8d8d1" }}>
+                        [{l.level}]
+                      </span>{" "}
+                      <span style={{ color: "#a8d8d1" }}>{l.text}</span>
+                    </div>
+                  ))}
+                {e.errors.map((err, i) => (
+                  <div key={i} className="mt-1 whitespace-pre-wrap pl-2" style={{ color: "#f09b93" }}>
+                    {err.name}: {err.message}
+                    {err.stack && (
+                      <span className="block" style={{ color: "rgba(240,155,147,0.6)" }}>{err.stack}</span>
+                    )}
                   </div>
                 ))}
-              {e.errors.map((err, i) => (
-                <div key={i} className="mt-1 whitespace-pre-wrap pl-2 text-red-300">
-                  {err.name}: {err.message}
-                  {err.stack && <span className="block text-red-400/60">{err.stack}</span>}
-                </div>
-              ))}
-            </div>
-          ))
+              </div>
+            );
+          })
         )}
       </div>
 
-      {/* ── Status bar ── */}
-      <div className="flex items-center justify-between border-t border-slate-800/60 bg-[#080f1e] px-6 py-2.5">
-        <div className="flex items-center gap-4 text-xs text-slate-600">
+      <div
+        className="flex items-center justify-between border-t px-6 py-2.5"
+        style={{ borderColor: "rgba(8,189,184,0.18)", background: "#06302e" }}
+      >
+        <div className="flex items-center gap-4 text-xs" style={{ color: "#5c8b85" }}>
           <div className="flex items-center gap-2">
             <span>Events</span>
-            <span className="rounded border border-slate-800 bg-slate-900/60 px-2 py-0.5 font-mono text-slate-400">
+            <span
+              className="rounded border px-2 py-0.5 font-mono"
+              style={{ borderColor: "rgba(8,189,184,0.25)", background: "#06302e", color: "#a8d8d1" }}
+            >
               {entries.length}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span>Branch</span>
-            <span className="rounded border border-slate-800 bg-slate-900/60 px-2 py-0.5 font-mono text-slate-400">
+            <span
+              className="rounded border px-2 py-0.5 font-mono"
+              style={{ borderColor: "rgba(8,189,184,0.25)", background: "#06302e", color: "#a8d8d1" }}
+            >
               {streaming ? selectedBranch : "—"}
             </span>
           </div>
-          <span className="text-slate-700">Ephemeral · may be sampled under high traffic</span>
+          <span style={{ color: "#3e6b64" }}>Ephemeral · may be sampled under high traffic</span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -421,7 +449,7 @@ export default function LiveLogsPageClient({ projectId, projectName }: LiveLogsP
             <button
               type="button"
               onClick={() => setAutoScroll(true)}
-              className="rounded border border-sky-800 px-2.5 py-1 text-[11px] text-sky-400 transition-colors hover:border-sky-600"
+              className="btn outline sm"
             >
               Resume scroll ↓
             </button>
@@ -430,7 +458,7 @@ export default function LiveLogsPageClient({ projectId, projectName }: LiveLogsP
             <button
               type="button"
               onClick={() => setEntries([])}
-              className="rounded border border-slate-800 px-2.5 py-1 text-[11px] text-slate-500 transition-colors hover:border-slate-600 hover:text-slate-300"
+              className="btn ghost sm"
             >
               Clear
             </button>

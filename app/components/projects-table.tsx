@@ -32,7 +32,9 @@ function groupOf(status: string | undefined): Filter {
 function ExternalIcon() {
   return (
     <svg
-      className="h-3.5 w-3.5"
+      className="ml-0.5"
+      width="11"
+      height="11"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -43,6 +45,23 @@ function ExternalIcon() {
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <path d="M15 3h6v6" />
       <path d="M10 14 21 3" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg
+      className="icon"
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      strokeWidth="2"
+      strokeLinecap="round"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
     </svg>
   );
 }
@@ -138,62 +157,56 @@ export default function ProjectsTable({ projects }: ProjectsTableProps) {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              type="button"
-              onClick={() => setFilter(f.key)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                filter === f.key
-                  ? "border-[#f6821f] bg-slate-800 text-white"
-                  : "border-slate-700 text-slate-400 hover:border-slate-600"
-              }`}
-            >
-              {f.label}
-              <span className="ml-1.5 text-slate-500">{counts[f.key]}</span>
-            </button>
-          ))}
+      <div className="toolbar">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => setFilter(f.key)}
+            className={`chip${filter === f.key ? " on" : ""}`}
+          >
+            {f.label}
+            <span className="n">{counts[f.key]}</span>
+          </button>
+        ))}
+        <div className="search">
+          <SearchIcon />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search projects…"
+          />
+          <span className="kbd badge-mini">⌘K</span>
         </div>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search projects…"
-          className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500 sm:w-56"
-        />
       </div>
 
-      {selected.size > 0 && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#f6821f]/30 bg-[#f6821f]/5 px-3 py-2">
-          <span className="text-sm text-slate-300">
-            <span className="font-semibold text-white">{selected.size}</span> selected
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSelected(new Set())}
-              className="rounded-md border border-slate-700 px-3 py-1.5 text-xs text-slate-300 hover:border-slate-500 hover:text-white"
-            >
-              Clear selection
-            </button>
-            <button
-              type="button"
-              onClick={() => setBulkDeleting(true)}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500"
-            >
-              Delete selected
-            </button>
-          </div>
-        </div>
-      )}
+      <div className={`bulkbar${selected.size > 0 ? " show" : ""}`}>
+        <span className="cnt">
+          <b>{selected.size}</b> selected
+        </span>
+        <button
+          type="button"
+          onClick={() => setSelected(new Set())}
+          className="btn ghost sm"
+        >
+          Clear selection
+        </button>
+        <span className="grow" />
+        <button
+          type="button"
+          onClick={() => setBulkDeleting(true)}
+          className="btn danger sm"
+        >
+          Delete selected
+        </button>
+      </div>
 
       {visible.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-700 p-10 text-center text-sm text-slate-400">
+        <div className="empty">
           {projects.length === 0 ? (
             <>
               No projects yet.{" "}
-              <Link href="/" className="text-[#f6821f] hover:underline">
+              <Link href="/" className="link">
                 Launch your first app
               </Link>
               .
@@ -203,138 +216,121 @@ export default function ProjectsTable({ projects }: ProjectsTableProps) {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-800">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-800 bg-slate-900/60 text-xs uppercase tracking-wide text-slate-400">
-              <tr>
-                <th className="w-10 px-4 py-3">
-                  <input
-                    ref={selectAllRef}
-                    type="checkbox"
-                    checked={allVisibleSelected}
-                    onChange={toggleSelectAll}
-                    aria-label="Select all visible projects"
-                    className="h-4 w-4 rounded border-slate-600"
-                  />
-                </th>
-                <th className="px-4 py-3 font-medium">Project</th>
-                <th className="px-4 py-3 font-medium">Template</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">URL</th>
-                <th className="px-4 py-3 font-medium">Repository</th>
-                <th className="px-4 py-3 font-medium">Launched</th>
-                <th className="px-4 py-3 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/70">
-              {visible.map((p) => {
-                const status = statuses[p.id];
-                const meta = getStatusMeta(status?.status);
-                return (
-                  <tr key={p.id} className="bg-slate-900/30 transition-colors hover:bg-slate-900/70">
-                    <td className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(p.id)}
-                        onChange={() => toggleSelect(p.id)}
-                        aria-label={`Select ${p.name}`}
-                        className="h-4 w-4 rounded border-slate-600"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/projects/${p.id}`}
-                        className="flex items-center gap-2 font-medium text-white hover:text-[#ff9436]"
-                      >
-                        <span
-                          className={`h-2 w-2 shrink-0 rounded-full ${meta.dotClass} ${
-                            meta.pulse ? "animate-pulse" : ""
-                          }`}
+        <div className="tblwrap">
+          <div className="table-scroll">
+            <table className="data">
+              <thead>
+                <tr>
+                  <th className="w-10">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleSelectAll}
+                      aria-label="Select all visible projects"
+                      className="cb"
+                    />
+                  </th>
+                  <th>Project</th>
+                  <th>Template</th>
+                  <th>Status</th>
+                  <th>URL</th>
+                  <th>Repository</th>
+                  <th>Launched</th>
+                  <th className="!text-right"> </th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((p) => {
+                  const status = statuses[p.id];
+                  const meta = getStatusMeta(status?.status);
+                  return (
+                    <tr key={p.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(p.id)}
+                          onChange={() => toggleSelect(p.id)}
+                          aria-label={`Select ${p.name}`}
+                          className="cb"
                         />
-                        {p.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-300">{p.templateName}</span>
-                        <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                            p.type === "pages"
-                              ? "bg-purple-500/15 text-purple-300"
-                              : "bg-sky-500/15 text-sky-300"
-                          }`}
-                        >
-                          {p.type}
+                      </td>
+                      <td>
+                        <div className="prow">
+                          <span className={`pdot ${meta.dotClass}`} />
+                          <Link href={`/projects/${p.id}`} className="pname">
+                            {p.name}
+                          </Link>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="prow">
+                          <span className="pmute">{p.templateName}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={meta.className} title={status?.error}>
+                          <span className="dot" />
+                          {meta.label}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${meta.className}`}
-                        title={status?.error}
-                      >
-                        {meta.pulse && (
-                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-sky-400" />
-                        )}
-                        {meta.label}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {(() => {
-                        const url = status?.liveUrl ?? p.liveUrl;
-                        return url ? (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-slate-300 hover:text-[#ff9436]"
-                          >
-                            Visit
-                            <ExternalIcon />
-                          </a>
-                        ) : (
-                          <span className="text-slate-600">—</span>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <a
-                        href={p.githubUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-slate-300 hover:text-[#ff9436]"
-                      >
-                        {p.owner}/{p.repo}
-                      </a>
-                    </td>
-                    <td className="px-4 py-3 text-slate-400">
-                      {new Date(p.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        {status?.latest && (
+                      </td>
+                      <td>
+                        {(() => {
+                          const url = status?.liveUrl ?? p.liveUrl;
+                          return url ? (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="url-cell inline-flex items-center"
+                            >
+                              Visit
+                              <ExternalIcon />
+                            </a>
+                          ) : (
+                            <span className="text-[var(--text-4)]">—</span>
+                          );
+                        })()}
+                      </td>
+                      <td>
+                        <a
+                          href={p.githubUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="url-cell"
+                        >
+                          {p.owner}/{p.repo}
+                        </a>
+                      </td>
+                      <td className="rel">
+                        {new Date(p.createdAt).toLocaleDateString()}
+                      </td>
+                      <td>
+                        <div className="row-act">
+                          {status?.latest && (
+                            <button
+                              type="button"
+                              onClick={() => setLogsFor({ project: p, runId: status.latest!.runId })}
+                              className="btn ghost sm"
+                            >
+                              Logs
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={() => setLogsFor({ project: p, runId: status.latest!.runId })}
-                            className="rounded-md border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:border-slate-500 hover:text-white"
+                            onClick={() => setDeleting(p)}
+                            className="btn ghost sm danger-hover"
                           >
-                            Logs
+                            Delete
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setDeleting(p)}
-                          className="rounded-md border border-slate-800 px-2 py-1 text-xs text-slate-500 hover:border-red-700 hover:text-red-300"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

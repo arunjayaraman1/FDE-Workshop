@@ -21,21 +21,19 @@ interface MembersPanelProps {
 }
 
 function roleBadge(role: ProjectRole) {
-  return role === "owner"
-    ? "bg-[#f6821f]/15 text-[#f6821f] border-[#f6821f]/30"
-    : "bg-sky-500/15 text-sky-300 border-sky-500/30";
+  return role === "owner" ? "pill warn" : "pill info";
 }
 
 function githubStateMeta(state: GithubInviteState): { label: string; className: string } {
   switch (state) {
     case "active":
-      return { label: "GitHub: collaborator", className: "bg-emerald-500/15 text-emerald-300" };
+      return { label: "GitHub: collaborator", className: "pill ok" };
     case "pending":
-      return { label: "GitHub: invite sent", className: "bg-amber-500/15 text-amber-300" };
+      return { label: "GitHub: invite sent", className: "pill warn" };
     case "failed":
-      return { label: "GitHub: failed", className: "bg-red-500/15 text-red-300" };
+      return { label: "GitHub: failed", className: "pill err" };
     default:
-      return { label: "No GitHub link", className: "bg-slate-800/70 text-slate-500" };
+      return { label: "No GitHub link", className: "pill flat" };
   }
 }
 
@@ -74,10 +72,7 @@ export default function MembersPanel({
   }, [projectId]);
 
   useEffect(() => {
-    const tick = async () => {
-      await load();
-    };
-    void tick();
+    void load();
   }, [load]);
 
   async function handleCreateInvite() {
@@ -169,35 +164,28 @@ export default function MembersPanel({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="set-grid">
       {(error || notice) && (
-        <div className="space-y-2">
-          {error && (
-            <div className="rounded-xl border border-amber-700/40 bg-amber-950/25 px-4 py-3 text-sm text-amber-300">
-              {error}
-            </div>
-          )}
-          {notice && (
-            <div className="rounded-xl border border-sky-800/40 bg-sky-950/25 px-4 py-3 text-sm text-sky-300">
-              {notice}
-            </div>
-          )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {error && <div className="alert-error">{error}</div>}
+          {notice && <div className="alert-ok">{notice}</div>}
         </div>
       )}
 
       {canManage && (
         <Card>
-          <CardHeader icon={<IconBox className="h-4 w-4 text-slate-400" />} title="Invite a member" />
-          <div className="space-y-4 px-5 py-4">
-            <p className="text-sm text-slate-400">
+          <CardHeader icon={<IconBox className="icon" />} title="Invite a member" />
+          <div className="card-bd">
+            <p className="pmute" style={{ marginBottom: 14 }}>
               Invite links are single-use and expire after 7 days. The person you invite chooses
               their username and GitHub handle when they accept.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as ProjectRole)}
-                className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 outline-none focus:border-slate-500"
+                className="input"
+                style={{ width: 160 }}
               >
                 <option value="member">Member</option>
                 <option value="owner">Owner</option>
@@ -206,16 +194,14 @@ export default function MembersPanel({
                 type="button"
                 onClick={handleCreateInvite}
                 disabled={creating}
-                className="rounded-lg bg-[#f6821f] px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn primary"
               >
                 {creating ? "Creating…" : "Generate invite link"}
               </button>
             </div>
             {inviteUrl && (
-              <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2">
-                <code className="min-w-0 flex-1 truncate font-mono text-xs text-[#f6821f]">
-                  {inviteUrl}
-                </code>
+              <div className="invite-wrap" style={{ marginTop: 14 }}>
+                <div className="invite-link">{inviteUrl}</div>
                 <CopyButton text={inviteUrl} iconOnly />
               </div>
             )}
@@ -225,36 +211,45 @@ export default function MembersPanel({
 
       <Card>
         <CardHeader
-          icon={<IconBox className="h-4 w-4 text-slate-400" />}
+          icon={<IconBox className="icon" />}
           title="Members"
           count={members.length}
         />
         {loading ? (
-          <div className="px-5 py-6 text-sm text-slate-500">Loading…</div>
+          <div style={{ padding: 20 }}>
+            <p className="pmute">Loading…</p>
+          </div>
         ) : members.length === 0 ? (
           <EmptyState
-            icon={<IconBox className="h-6 w-6" />}
+            icon={<IconBox className="icon" />}
             title="No members yet"
             hint="Generate an invite link to add the first member."
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-800/80 bg-slate-950/40 text-xs font-medium text-slate-500">
+          <div className="table-scroll">
+            <table className="data">
+              <thead>
                 <tr>
-                  <th className="px-5 py-3">Username</th>
-                  <th className="px-5 py-3">Role</th>
-                  <th className="px-5 py-3">GitHub</th>
-                  <th className="px-5 py-3" />
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>GitHub</th>
+                  <th className="!text-right" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
+              <tbody>
                 {members.map((m) => {
                   const gh = githubStateMeta(m.githubInviteState);
                   return (
-                    <tr key={m.userId} className="transition-colors hover:bg-slate-950/50">
-                      <td className="px-5 py-3 font-mono text-slate-200">{m.username}</td>
-                      <td className="px-5 py-3">
+                    <tr key={m.userId}>
+                      <td>
+                        <div className="member-cell">
+                          <div>
+                            <div className="m-name">{m.username}</div>
+                            <div className="m-handle">@{m.username}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
                         {canManage ? (
                           <select
                             value={m.role}
@@ -262,7 +257,8 @@ export default function MembersPanel({
                             onChange={(e) =>
                               handleRoleChange(m.userId, e.target.value as ProjectRole)
                             }
-                            className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-200 outline-none focus:border-slate-500"
+                            className="input"
+                            style={{ width: 130, height: 32, padding: "6px 10px" }}
                           >
                             <option value="member">Member</option>
                             <option value="owner">Owner</option>
@@ -271,30 +267,27 @@ export default function MembersPanel({
                           <Badge className={roleBadge(m.role)}>{m.role}</Badge>
                         )}
                       </td>
-                      <td className="px-5 py-3">
-                        <div className="flex flex-col gap-1">
-                          <span className="font-mono text-xs text-slate-400">
-                            {m.githubUsername ?? "—"}
-                          </span>
-                          <span
-                            className={`inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${gh.className}`}
-                            title={m.githubInviteError}
-                          >
+                      <td>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <span className="url-cell">{m.githubUsername ?? "—"}</span>
+                          <span className={gh.className} title={m.githubInviteError}>
                             {gh.label}
                           </span>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-right">
-                        {canManage && (
-                          <button
-                            type="button"
-                            disabled={busyUser === m.userId}
-                            onClick={() => handleRemove(m.userId, m.username)}
-                            className="rounded-lg border border-slate-700/80 bg-slate-800/40 px-3 py-1 text-xs text-red-300 transition-all hover:border-red-700 hover:bg-red-950/40 disabled:opacity-60"
-                          >
-                            Remove
-                          </button>
-                        )}
+                      <td>
+                        <div className="row-act">
+                          {canManage && (
+                            <button
+                              type="button"
+                              disabled={busyUser === m.userId}
+                              onClick={() => handleRemove(m.userId, m.username)}
+                              className="btn ghost sm danger-hover"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -308,34 +301,28 @@ export default function MembersPanel({
       {canManage && invites.length > 0 && (
         <Card>
           <CardHeader
-            icon={<IconBox className="h-4 w-4 text-slate-400" />}
+            icon={<IconBox className="icon" />}
             title="Invites"
             count={invites.length}
           />
-          <div className="divide-y divide-slate-800/60">
+          <div style={{ padding: "4px 18px" }}>
             {invites.map((inv) => (
-              <div key={inv.tokenHash} className="flex items-center justify-between gap-4 px-5 py-3">
-                <div className="min-w-0">
-                  <div className="text-sm text-slate-200">
-                    <Badge className={roleBadge(inv.role)}>{inv.role}</Badge>
-                    <span
-                      className={`ml-2 text-xs ${
-                        inv.state === "pending" ? "text-amber-300" : "text-slate-500"
-                      }`}
-                    >
-                      {inv.state}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 truncate text-xs text-slate-500">
-                    by {inv.createdBy} · expires {new Date(inv.expiresAt).toLocaleDateString()}
-                  </div>
-                </div>
+              <div key={inv.tokenHash} className="kv-row">
+                <span className="k">{inv.role}</span>
+                <Badge
+                  className={inv.state === "pending" ? "pill warn" : "pill flat"}
+                >
+                  {inv.state}
+                </Badge>
+                <span className="pmute" style={{ flex: 1 }}>
+                  by {inv.createdBy} · expires {new Date(inv.expiresAt).toLocaleDateString()}
+                </span>
                 {inv.state === "pending" && (
                   <button
                     type="button"
                     disabled={busyUser === inv.tokenHash}
                     onClick={() => handleRevoke(inv.tokenHash)}
-                    className="shrink-0 rounded-lg border border-slate-700/80 bg-slate-800/40 px-3 py-1 text-xs text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-700/60 disabled:opacity-60"
+                    className="btn ghost sm danger-hover"
                   >
                     Revoke
                   </button>
@@ -346,9 +333,9 @@ export default function MembersPanel({
         </Card>
       )}
 
-      <p className="text-xs text-slate-500">
-        Signed in as a project <span className="text-slate-400">{role}</span>. Access is scoped to
-        this project; global admins see everything.
+      <p className="pmute">
+        Signed in as a project <span style={{ color: "var(--text-2)", fontWeight: 600 }}>{role}</span>.
+        Access is scoped to this project; global admins see everything.
       </p>
     </div>
   );

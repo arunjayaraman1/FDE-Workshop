@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Newpage Launchpad | Internal Platform Proposal</title>
+  <style>
+    :root{--ink:#10233f;--muted:#617087;--navy:#071c35;--blue:#2878ff;--cyan:#17b7c8;--green:#20a06b;--amber:#eaa52b;--red:#d55353;--purple:#7657cf;--paper:#f4f7fb;--card:#fff;--line:#dfe6ef;--soft-blue:#eaf2ff;--soft-cyan:#e8f8fa;--soft-green:#eaf7f1;--soft-amber:#fff5df;--soft-red:#fff0f0;--radius:18px;--shadow:0 14px 40px rgba(8,33,64,.09)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--paper);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}a{color:inherit}.wrap{width:min(1180px,calc(100% - 40px));margin:0 auto}
+    .topbar{position:sticky;top:0;z-index:20;color:#fff;background:rgba(7,28,53,.96);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.12)}.topbar-inner{min-height:66px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:12px;font-weight:750}.logo-chip{display:inline-flex;align-items:center;height:34px;padding:6px 10px;border-radius:10px;background:#fff}.logo-chip img{height:100%;width:auto;display:block}.topbar nav{display:flex;gap:18px;flex-wrap:wrap}.topbar nav a{color:#cdd9e8;text-decoration:none;font-size:13px}.topbar nav a:hover{color:#fff}
+    .hero{position:relative;overflow:hidden;color:#fff;background:radial-gradient(circle at 84% 18%,rgba(23,183,200,.30),transparent 24%),radial-gradient(circle at 8% 90%,rgba(40,120,255,.25),transparent 28%),linear-gradient(135deg,#071a32 0%,#0a2d53 62%,#0a3857 100%);padding:84px 0 72px}.hero:after{content:"";position:absolute;inset:0;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,#000,transparent 90%)}.hero-grid{position:relative;z-index:2;display:grid;grid-template-columns:1.35fr .65fr;gap:52px;align-items:center}.eyebrow{color:#8ce7ef;font-size:13px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase}h1{margin:12px 0 18px;max-width:870px;font-size:clamp(44px,6vw,72px);line-height:1.02;letter-spacing:-2.6px}.hero p{max-width:810px;margin:0;color:#d1deeb;font-size:19px}.hero-tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}.tag{padding:8px 12px;border:1px solid rgba(255,255,255,.23);border-radius:999px;background:rgba(255,255,255,.08);color:#eaf4ff;font-size:13px}.mission-card{padding:28px;border-radius:24px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);box-shadow:0 20px 60px rgba(0,0,0,.18)}.mission-card .label{font-size:12px;color:#93dfe8;text-transform:uppercase;letter-spacing:1.4px;font-weight:800}.mission-card h2{margin:10px 0 8px;font-size:25px}.mission-card p{font-size:15px;color:#d6e2ef}.mission-card strong{display:block;margin-top:22px;color:#fff;font-size:20px}
+    main{padding:56px 0 88px}section{scroll-margin-top:82px;margin-bottom:58px}.section-kicker{margin-bottom:8px;color:var(--blue);font-size:12px;font-weight:850;letter-spacing:1.6px;text-transform:uppercase}.section-title{margin:0 0 12px;font-size:34px;line-height:1.13;letter-spacing:-.8px}.section-intro{max-width:890px;margin:0 0 28px;color:var(--muted);font-size:17px}.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.card{padding:25px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow)}.card h3{margin:0 0 9px;font-size:18px}.card p{margin:0;color:var(--muted)}.icon{width:44px;height:44px;display:grid;place-items:center;margin-bottom:16px;border-radius:13px;color:#fff;background:linear-gradient(135deg,var(--blue),var(--cyan));font-size:20px;font-weight:850}.number{width:38px;height:38px;display:grid;place-items:center;margin-bottom:18px;border-radius:12px;background:var(--soft-blue);color:var(--blue);font-weight:850}
+    .callout{padding:26px 28px;border-radius:var(--radius);border-left:5px solid var(--blue);background:var(--soft-blue)}.callout strong{display:block;margin-bottom:6px;font-size:18px}.callout p{margin:0;color:#405470}.callout.warning{border-left-color:var(--amber);background:var(--soft-amber)}.callout.success{border-left-color:var(--green);background:var(--soft-green)}.callout.danger{border-left-color:var(--red);background:var(--soft-red)}
+    .scenario-panel{padding:32px;border:1px solid #b9d2ff;border-radius:22px;background:linear-gradient(135deg,#f4f8ff,#edfaff)}.scenario-panel h3{margin:0 0 18px;font-size:25px}.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.fact{padding:17px;border-radius:14px;background:rgba(255,255,255,.88);border:1px solid #dbe8f7}.fact span{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.7px}.fact strong{display:block;margin-top:6px;font-size:19px}.brief{margin-top:22px;padding:22px;border-radius:16px;background:#fff;border:1px solid #dbe8f7}.brief h4{margin:0 0 10px}.brief p{margin:0;color:#43546c}.attention{margin-top:14px;padding:16px;border-radius:12px;background:var(--soft-blue);color:#1c4a86}
+    ul.clean{margin:12px 0 0;padding-left:20px}ul.clean li{margin:8px 0;color:#465872}.role{display:flex;gap:14px;align-items:flex-start}.role-badge{flex:0 0 42px;width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:var(--soft-cyan);color:#078493;font-weight:850;font-size:12px}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}.flow-step{position:relative;min-height:150px;padding:19px;border-radius:16px;background:var(--navy);color:#fff}.flow-step:not(:last-child):after{content:"→";position:absolute;right:-18px;top:60px;z-index:2;color:var(--blue);font-size:24px;font-weight:900}.flow-step span{color:#7bdde8;font-size:12px;font-weight:800;text-transform:uppercase}.flow-step strong{display:block;margin:9px 0 6px;font-size:17px}.flow-step p{margin:0;color:#bed0e2;font-size:13px}
+    table{width:100%;border-collapse:collapse;overflow:hidden;border-radius:16px;background:#fff;box-shadow:var(--shadow)}th{padding:15px 16px;color:#fff;background:var(--navy);font-size:13px;text-align:left}td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:top;color:#43546c}tr:last-child td{border-bottom:0}.pill{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:750}.pill.high{color:#a73333;background:var(--soft-red)}.pill.med{color:#9b6714;background:var(--soft-amber)}.pill.low{color:#14754f;background:var(--soft-green)}
+    .codebox{overflow-x:auto;margin-top:16px;padding:21px;border-radius:15px;color:#d7e7f6;background:#071a2f;font-family:"SFMono-Regular",Consolas,monospace;font-size:13px;line-height:1.65}.codebox .key{color:#74d5e0}.codebox .str{color:#a9d68f}
+    .footer{padding:30px 0;color:#aab9ca;background:var(--navy);font-size:13px}.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .twist{color:#fff;background:linear-gradient(135deg,#0d3a2e,#0f5240 52%,#127a5c);border:0;padding:34px 36px;margin-top:64px}.twist .section-kicker{color:#a6f0d6}.twist h2{margin:4px 0 10px;color:#fff}.twist p,.twist li{color:#dff5ea}.twist-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}.twist .twist-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}.twist .badge{padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.1);color:#eafff5;font-size:12px;font-weight:800}.twist .twist-lead{margin:0 0 26px;max-width:900px;font-size:17px}.twist h3{margin:0 0 10px;font-size:18px;color:#fff}.twist ul{margin:0;padding-left:18px}.twist li{margin:8px 0}.twist .twist-foot{margin:24px 0 0;padding-top:16px;border-top:1px solid rgba(255,255,255,.22);font-size:14px}
+    @media(max-width:940px){.hero-grid,.grid-4,.facts{grid-template-columns:1fr 1fr}.grid-3{grid-template-columns:1fr 1fr}.flow{grid-template-columns:1fr}.flow-step{min-height:auto}.flow-step:not(:last-child):after{content:"↓";right:50%;top:auto;bottom:-23px}.topbar nav{display:none}}@media(max-width:650px){.wrap{width:min(100% - 24px,1180px)}.hero{padding:58px 0}.hero-grid,.grid-2,.grid-3,.grid-4,.facts,.twist-grid{grid-template-columns:1fr}h1{font-size:43px;letter-spacing:-1.6px}.footer-inner{display:block}}@media print{.topbar{position:static}body{background:#fff}.card,table{box-shadow:none}section{break-inside:avoid}}
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="wrap topbar-inner"><div class="brand"><span class="logo-chip"><img src="assets/newpage-logo.png" alt="Newpage" /></span><span>Launchpad · Internal Proposal</span></div><nav aria-label="Presentation sections"><a href="#context">Context</a><a href="#how">How it works</a><a href="#built">What's built</a><a href="#twist">Twist</a></nav></div></header>
+
+  <section class="hero"><div class="wrap hero-grid">
+    <div><div class="eyebrow">Newpage Platform &amp; Delivery · September 2026</div><h1>Newpage Launchpad</h1><p>An internal self-serve launcher that turns "new app idea" into a deployed, CI/CD-connected GitHub repo in about two minutes — on Cloudflare or AWS.</p><div class="hero-tags"><span class="tag">Self-Serve Templates</span><span class="tag">Cloudflare + AWS</span><span class="tag">CI/CD by Default</span><span class="tag">Least-Privilege Secrets</span><span class="tag">Full Audit Trail</span></div></div>
+    <aside class="mission-card"><div class="label">The problem today</div><h2>Every new service is a hand-rolled snowflake.</h2><p>Someone scaffolds a repo, wires up CI, stumbles over secrets, and documents none of it — a little differently every single time.</p><strong>Collapse that to ~2 minutes, identically every time.</strong></aside>
+  </div></section>
+
+  <main><div class="wrap">
+    <section id="context"><div class="section-kicker">01 · The problem</div><h2 class="section-title">Shipping a new service costs 30–60 minutes of tribal knowledge — every time</h2><p class="section-intro">An experienced engineer can scaffold a repo, wire CI, and add secrets in under an hour. But the result is different every time, nothing is reviewed, and nothing is recorded once it's done.</p>
+      <div class="grid-4">
+        <article class="card"><div class="icon">1</div><h3>Hand-rolled repos</h3><p>Every new service means scaffolding, wiring CI, and copy-pasting workflow files from whichever repo someone remembers.</p></article>
+        <article class="card"><div class="icon">2</div><h3>Secrets managed ad hoc</h3><p>Provider credentials get pasted around instead of stored as encrypted, least-privilege repo secrets.</p></article>
+        <article class="card"><div class="icon">3</div><h3>Tribal knowledge</h3><p>New starters guess "how we did it last time" instead of launching from a maintained, reviewed template.</p></article>
+        <article class="card"><div class="icon">4</div><h3>Nothing to point to</h3><p>No record of who launched what, when access changed, or what got deleted.</p></article>
+      </div>
+    </section>
+
+    <section><div class="scenario-panel"><div class="section-kicker">The platform today</div><h3>One launcher, two clouds, fifteen templates</h3>
+      <div class="facts"><div class="fact"><span>Maintained templates</span><strong>15</strong></div><div class="fact"><span>Template categories</span><strong>5</strong></div><div class="fact"><span>Providers</span><strong>2 (CF + AWS)</strong></div><div class="fact"><span>Idea → deployed</span><strong>~2 min</strong></div></div>
+      <div class="brief"><h4>Operating idea</h4><p>Sign in, pick a language and one of the 15 maintained templates (built-in, or scaffolded live from <code>create-cloudflare</code>), and configure name, org target, region, secrets, env vars, and bindings in one guided wizard. Launchpad scaffolds the project, creates the GitHub repo, sets provider credentials as encrypted repo secrets, and pushes — a GitHub Actions workflow then deploys, visible live on the page.</p><div class="attention"><strong>Deliberate scope boundary:</strong> Launchpad is not a PaaS or hosting platform. It owns the path from "ship this" to "live and wired to CI/CD" — and nothing after. Teams keep owning the runtime.</div></div>
+    </div></section>
+
+    <section id="how"><div class="section-kicker">02 · The approach</div><h2 class="section-title">Replace the platform ticket with a self-serve launcher</h2><p class="section-intro">Launchpad doesn't add a new place to manage running apps — it removes the setup tax that sits in front of every one of them.</p>
+      <div class="grid-2">
+        <article class="card"><h3>Before Launchpad</h3><ul class="clean"><li>File a platform ticket and wait.</li><li>Hand-roll the repo, CI, and secrets from memory.</li><li>Every project ends up wired slightly differently.</li><li>No record of who has access or what changed.</li><li>Onboarding means learning tribal setup steps.</li></ul></article>
+        <article class="card"><h3>With Launchpad</h3><ul class="clean"><li>Sign in and pick a maintained template.</li><li>Configure once in a guided wizard — name, org, region, secrets.</li><li>Launchpad scaffolds, creates the repo, sets secrets, pushes.</li><li>GitHub Actions deploys — visible live on the page.</li><li>Redeploys, env vars, bindings, invites, and an audit log, built in.</li></ul></article>
+      </div>
+    </section>
+
+    <section><div class="section-kicker">03 · Why it should exist</div><h2 class="section-title">Speed and consistency, without giving up control</h2>
+      <div class="grid-2">
+        <article class="card"><h3>Speed over hand-rolled setup</h3><p>Scaffolding a repo, wiring CI, and adding secrets costs 30–60 minutes per project today — Launchpad collapses that to roughly two minutes of guided clicks, identically every time.</p></article>
+        <article class="card"><h3>Consistency beats tribal knowledge</h3><p>Templates, workflows, and config live in one reviewed, versioned place. Update a template once and every future project inherits the fix.</p></article>
+        <article class="card"><h3>Security by default</h3><p>Least-privilege tokens, credentials encrypted at rest, provider keys stored as GitHub repo secrets, invite links with expiry, and a tamper-evident audit log.</p></article>
+        <article class="card"><h3>One surface for Cloudflare and AWS</h3><p>Workers/Pages and Lambda/Amplify side by side, so teams pick the runtime that fits the job — not the one someone remembers how to wire up.</p></article>
+      </div>
+    </section>
+
+    <section><div class="section-kicker">04 · Feature highlights</div><h2 class="section-title">One branded console, real team access, and a lock on the deployed app itself</h2>
+      <div class="grid-3">
+        <article class="card"><h3>Newpage Deploy Console</h3><p>One branded home for every launch — signed into the "Newpage" workspace, with every project, template, and setting under a single console instead of a pile of separate tools.</p></article>
+        <article class="card"><h3>Members &amp; team access</h3><p>Every project has owners and members. Owners send single-use invite links (7-day TTL) that grant Launchpad access and, with a GitHub handle, matching repo collaboration — admin for owners, push for members.</p></article>
+        <article class="card"><h3>Site access keys</h3><p>Turn on Site Access to gate the deployed app's live URL behind an access key — visitors hit a sign-in prompt before they ever reach the app, independent of who can sign into Launchpad itself.</p></article>
+      </div>
+    </section>
+
+    <section><div class="section-kicker">05 · How it works</div><h2 class="section-title">Sign-in to a deployed app, in five guided steps</h2>
+      <div class="flow">
+        <div class="flow-step"><span>Step 1</span><strong>Sign in</strong><p>Shared org password plus a username. First user (or the configured admin) becomes global admin.</p></div>
+        <div class="flow-step"><span>Step 2</span><strong>Pick a template</strong><p>Language and one of 15 maintained templates across 5 categories — or a live create-cloudflare scaffold.</p></div>
+        <div class="flow-step"><span>Step 3</span><strong>Configure</strong><p>Name, visibility, GitHub org, region and credentials, env vars, bindings, preview and provisioning toggles.</p></div>
+        <div class="flow-step"><span>Step 4</span><strong>Launch</strong><p>Launchpad scaffolds the project, creates the repo, encrypts and sets secrets, and pushes to main.</p></div>
+        <div class="flow-step"><span>Step 5</span><strong>Deploy</strong><p>GitHub Actions deploys to Workers, Pages, Lambda (SAM), or Amplify — live on the launch page.</p></div>
+      </div>
+    </section>
+
+    <section id="built"><div class="section-kicker">06 · The project page</div><h2 class="section-title">Everything about a launched project, in one place</h2>
+      <table><thead><tr><th>Tab</th><th>What you see</th><th>Example</th></tr></thead><tbody>
+        <tr><td>Overview</td><td>Live URL, latest run, template, and deploy workflow</td><td>https://api-gateway.newpage.workers.dev</td></tr>
+        <tr><td>Deploy History</td><td>Every run — commit, status, duration, full logs</td><td>Run #42 · success · 1m 12s</td></tr>
+        <tr><td>Environment</td><td>Env vars managed without leaving the page</td><td>LOG_LEVEL, REGION, API_KEY (secret)</td></tr>
+        <tr><td>Bindings</td><td>KV, D1, R2, AI Search — added in the UI or provisioned from code</td><td>CACHE (KV), DB (D1)</td></tr>
+        <tr><td>Members</td><td>Owners &amp; members, single-use invite links (7-day TTL)</td><td>jane-doe · member · GitHub linked</td></tr>
+        <tr><td>Access</td><td>Public site, or protected with an org/members key</td><td>Protected · org key</td></tr>
+        <tr><td>Activity</td><td>Full audit — every sign-in, launch, redeploy, and delete</td><td>"admin redeployed api-gateway · 2m ago"</td></tr>
+      </tbody></table>
+    </section>
+
+    <section><div class="section-kicker">07 · Templates</div><h2 class="section-title">Fifteen maintained templates, five categories, both clouds</h2><p class="section-intro">Built-in templates and live <code>create-cloudflare</code> scaffolders, each carrying a manifest that says exactly what it deploys and how.</p>
+      <table><thead><tr><th>Category</th><th>Templates</th><th>Providers</th><th>Purpose</th></tr></thead><tbody>
+        <tr><td>JavaScript</td><td>2</td><td>Cloudflare</td><td>Plain Workers, built-in or via create-cloudflare</td></tr>
+        <tr><td>TypeScript</td><td>3</td><td>Cloudflare, AWS</td><td>Typed Workers and an AWS Lambda starter</td></tr>
+        <tr><td>Python</td><td>2</td><td>Cloudflare, AWS</td><td>Python Workers and AWS Lambda</td></tr>
+        <tr><td>Frameworks</td><td>6</td><td>Cloudflare, AWS</td><td>Astro, Hono, Next.js, Express — on Workers or Amplify</td></tr>
+        <tr><td>Static</td><td>2</td><td>Cloudflare, AWS</td><td>Cloudflare Pages and AWS Amplify static sites</td></tr>
+      </tbody></table>
+      <div class="codebox" aria-label="Example template manifest">
+{<br>
+&nbsp;&nbsp;<span class="key">"id"</span>: <span class="str">"c3-worker-ts"</span>,<br>
+&nbsp;&nbsp;<span class="key">"provider"</span>: <span class="str">"cloudflare"</span>,<br>
+&nbsp;&nbsp;<span class="key">"runtime"</span>: <span class="str">"TypeScript"</span>,<br>
+&nbsp;&nbsp;<span class="key">"cmd"</span>: <span class="str">"wrangler deploy"</span>,<br>
+&nbsp;&nbsp;<span class="key">"files"</span>: [<span class="str">"wrangler.jsonc"</span>, <span class="str">"src/index.ts"</span>, <span class="str">"package.json"</span>, <span class="str">"tsconfig.json"</span>, <span class="str">"README.md"</span>]<br>
+}
+      </div>
+    </section>
+
+    <section><div class="section-kicker">08 · What it answers</div><h2 class="section-title">The practical questions a launcher has to answer</h2>
+      <table><thead><tr><th>What people need</th><th>What Launchpad does</th><th>Priority</th></tr></thead><tbody>
+        <tr><td>"I need a new Worker with CI attached."</td><td>Pick a template, configure, launch — live in ~2 minutes</td><td><span class="pill high">Core</span></td></tr>
+        <tr><td>"Who has access to this project?"</td><td>Members tab — owners, members, and pending invites</td><td><span class="pill high">Core</span></td></tr>
+        <tr><td>"Did anyone change env vars or delete a project?"</td><td>Full audit log — every action, with who and when</td><td><span class="pill high">Core</span></td></tr>
+        <tr><td>"Can I add a KV/D1 binding without touching the UI?"</td><td>Provisioning from code — push it to wrangler.toml, the deploy step creates it</td><td><span class="pill med">Important</span></td></tr>
+        <tr><td>"A teammate needs GitHub access too."</td><td>Invite links can add them as a repo collaborator with the right permission</td><td><span class="pill med">Important</span></td></tr>
+        <tr><td>"Can this run on AWS instead of Cloudflare?"</td><td>Same launcher, same wizard — Lambda (SAM) or Amplify, side by side with Workers/Pages</td><td><span class="pill high">Core</span></td></tr>
+      </tbody></table>
+    </section>
+
+    <section><div class="section-kicker">09 · Security &amp; reliability</div><h2 class="section-title">Secure by default, not by policy document</h2>
+      <div class="grid-3">
+        <article class="card"><h3>Least privilege</h3><p>Tokens scoped to only what's needed — <code>repo</code> + <code>workflow</code> for GitHub, Edit permissions for Cloudflare, minimal IAM for AWS.</p></article>
+        <article class="card"><h3>Credentials at rest</h3><p>Per-project GitHub tokens and AWS keys are encrypted before being persisted; without a secret key, they simply aren't stored.</p></article>
+        <article class="card"><h3>Deploy secrets</h3><p>Provider credentials are set as GitHub-encrypted repo secrets and are never returned by any Launchpad API.</p></article>
+        <article class="card"><h3>Session security</h3><p>HMAC-signed session cookie, 8-hour TTL, HttpOnly, SameSite=Strict, with rate-limited logins.</p></article>
+        <article class="card"><h3>Invite-based access</h3><p>Single-use invite links expire after seven days; accepting one can also grant GitHub repo collaboration.</p></article>
+        <article class="card"><h3>Full audit log</h3><p>Every sign-in, launch, redeploy, delete, and env-var change is appended to a tamper-evident log.</p></article>
+      </div>
+    </section>
+
+    <section><div class="section-kicker">10 · Scope</div><h2 class="section-title">Deliberately narrow, on purpose</h2>
+      <div class="grid-2"><div class="callout"><strong>In scope</strong><p>15 templates across 5 categories plus live scaffolders; a launch wizard with bindings, env vars, region/credentials, and preview/provisioning toggles; a projects table with search and bulk actions; a seven-tab project page; live logs and preview branches (Cloudflare); single-use invites; and settings with security status, org config, and a full audit log.</p></div><div class="callout danger"><strong>Out of scope</strong><p>Launchpad is not a PaaS — it doesn't run the apps it deploys, and it can't be hosted on Cloudflare itself (it needs a filesystem and spawns <code>create-cloudflare</code>, so it runs on a Node host). Teams keep owning the runtime after launch.</p></div></div>
+    </section>
+
+    <section id="twist" class="card twist">
+      <div class="twist-head">
+        <div class="section-kicker">11 · The twist</div>
+        <span class="badge">Two things exist today, not just a deck</span>
+      </div>
+      <h2>This isn't a concept. We already built it — twice.</h2>
+      <p class="twist-lead">Alongside this proposal there are two real deliverables: a clickable interactive prototype that demonstrates every screen and flow, and the actual Launchpad application, which signs people in, creates real GitHub repos, sets real repo secrets, and triggers real GitHub Actions deploys to Cloudflare and AWS end to end today.</p>
+      <div class="twist-grid">
+        <div>
+          <h3>The interactive prototype</h3>
+          <ul>
+          <li>A single self-contained HTML file (<code>prototypes/launchpad-full.html</code>) that drives every screen and flow — login, launch wizard, animated deploy, live log stream, project tabs, invites, settings — with no backend.</li>
+          <li>Used for stakeholder demos and as the driving surface for the 7-minute walkthrough video script.</li>
+          <li>Matches the exact visual language of the real app, so a demo and the live product feel identical.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>The real, working application</h3>
+          <ul>
+          <li>A Next.js app with real GitHub, Cloudflare, and AWS integrations — not a mock.</li>
+          <li>Real login and session security, encrypted credentials, and a real audit log.</li>
+          <li>A project launched through it is a real, deployed Worker, Pages site, Lambda, or Amplify app with CI/CD attached — today.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="twist-foot">Ask for a live walk-through of either: the clickable prototype, or a real launch, end to end.</p>
+    </section>
+
+  </div></main>
+
+  <footer class="footer"><div class="wrap footer-inner"><span>Newpage Launchpad · Newpage Platform &amp; Delivery · Internal proposal</span><span>Not for external distribution · September 2026</span></div></footer>
+</body>
+</html>

@@ -31,49 +31,29 @@ export default function TemplatesBrowser({ templates }: TemplatesBrowserProps) {
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="tpl-grid">
         {templates.map((t) => (
-          <div
-            key={t.id}
-            className="flex flex-col rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition-colors hover:border-slate-700"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <span className="text-sm font-semibold text-white">{t.name}</span>
-              <span className="shrink-0 rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                {platformLabel(t)}
-              </span>
+          <div key={t.id} className={`card tpl-card${isAmplify(t) ? " op-ghost" : ""}`}>
+            <div className="tpl-top">
+              <h3>{t.name}</h3>
+              <span className="plat-chip">{platformLabel(t)}</span>
             </div>
-            <p className="mt-1.5 flex-1 text-xs leading-relaxed text-slate-400">{t.description}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-{t.source === "c3" && (
-                  <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-300">
-                    create-cloudflare
-                  </span>
-                )}
-                {isAmplify(t) && (
-                  <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-300">
-                    coming soon
-                  </span>
-                )}
-                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
+            <p className="tpl-desc">{t.description}</p>
+            <div className="tag-row">
+              {t.source === "c3" && <span className="tag c3">create-cloudflare</span>}
+              {isAmplify(t) && <span className="tag soon">coming soon</span>}
+              <span className="tag">
                 {CATEGORIES.find((c) => c.id === t.category)?.label ?? t.category}
               </span>
-              <span className="rounded-full bg-slate-800/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                {templateStack(t)}
-              </span>
-              {t.buildCommand && (
-                <span className="rounded-full bg-slate-800/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                  build
-                </span>
-              )}
+              <span className="tag">{templateStack(t)}</span>
+              {t.buildCommand && <span className="tag">build</span>}
             </div>
             <button
               type="button"
               onClick={() => setSelected(t)}
               disabled={isAmplify(t)}
-              className={isAmplify(t)
-                ? "mt-4 w-full rounded-md border px-3 py-2 text-xs font-semibold transition-colors border-slate-700 text-slate-500 cursor-not-allowed"
-                : "mt-4 w-full rounded-md border border-slate-700 px-3 py-2 text-xs font-semibold transition-colors hover:border-[#f6821f] hover:text-[#f6821f]"}
+              className={`btn outline${isAmplify(t) ? " is-disabled" : ""}`}
+              style={{ width: "100%", marginTop: 16 }}
             >
               {isAmplify(t) ? "Coming Soon" : "View details"}
             </button>
@@ -83,34 +63,34 @@ export default function TemplatesBrowser({ templates }: TemplatesBrowserProps) {
 
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          className="modal show"
           onClick={() => setSelected(null)}
           role="dialog"
           aria-modal="true"
           aria-label={`${selected.name} details`}
         >
+          <div className="backdrop" />
           <div
-            className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-2xl"
+            className="dialog lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 border-b border-slate-800 px-5 py-4">
+            <div className="dlg-head">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-base font-semibold text-white">{selected.name}</h2>
-                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                    {platformLabel(selected)}
-                  </span>
+                  <h3>{selected.name}</h3>
+                  <span className="plat-chip">{platformLabel(selected)}</span>
                 </div>
-                <p className="mt-1 text-xs text-slate-400">{selected.description}</p>
+                <p>{selected.description}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelected(null)}
                 aria-label="Close"
-                className="shrink-0 rounded-md p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+                className="dlg-x"
               >
                 <svg
-                  className="h-4 w-4"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -122,87 +102,86 @@ export default function TemplatesBrowser({ templates }: TemplatesBrowserProps) {
               </button>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
-              <div className="flex flex-wrap gap-1.5">
-                <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-300">
+            <div className="dlg-body">
+              <div className="tag-row" style={{ marginBottom: 16 }}>
+                <span className="tag">
                   {CATEGORIES.find((c) => c.id === selected.category)?.label ?? selected.category}
                 </span>
-                <span className="rounded-full bg-slate-800/60 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                  Stack: {templateStack(selected)}
-                </span>
-                <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-300">
+                <span className="tag">Stack: {templateStack(selected)}</span>
+                <span className={`tag${selected.source === "c3" ? " c3" : ""}`}>
                   {selected.source === "c3" ? "create-cloudflare (live)" : "Built-in"}
                 </span>
-                {selected.requiresRoute && (
-                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-300">
-                    Requires custom route
-                  </span>
-                )}
+                {selected.requiresRoute && <span className="tag soon">Requires custom route</span>}
               </div>
 
-              <div className="rounded-lg border border-slate-800 bg-slate-950/50 px-3.5 py-3">
-                <span className="mb-2 block text-xs font-medium text-slate-300">Deployment</span>
-                <dl className="space-y-1.5 text-xs">
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Platform</dt>
-                    <dd className="text-right text-slate-200">{platformLabel(selected)}</dd>
+              <div
+                className="codebox"
+                style={{ padding: "4px 0" }}
+              >
+                <div className="kv-row" style={{ padding: "10px 12px" }}>
+                  <span className="k">Platform</span>
+                  <span className="v" style={{ whiteSpace: "normal" }}>
+                    {platformLabel(selected)}
+                  </span>
+                </div>
+                <div className="kv-row" style={{ padding: "10px 12px" }}>
+                  <span className="k">Source</span>
+                  <span className="v" style={{ whiteSpace: "normal" }}>
+                    {selected.source === "c3" ? "create-cloudflare (live)" : "Built-in"}
+                  </span>
+                </div>
+                <div className="kv-row" style={{ padding: "10px 12px" }}>
+                  <span className="k">Runtime</span>
+                  <span className="v" style={{ whiteSpace: "normal" }}>
+                    {templateStack(selected)}
+                  </span>
+                </div>
+                {selected.deploy?.setup && (
+                  <div className="kv-row" style={{ padding: "10px 12px" }}>
+                    <span className="k">Setup</span>
+                    <span className="v" title={selected.deploy.setup}>
+                      {selected.deploy.setup}
+                    </span>
                   </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Source</dt>
-                    <dd className="text-right text-slate-200">
-                      {selected.source === "c3" ? "create-cloudflare (live)" : "Built-in"}
-                    </dd>
+                )}
+                {selected.buildCommand && (
+                  <div className="kv-row" style={{ padding: "10px 12px" }}>
+                    <span className="k">Build</span>
+                    <span className="v" title={selected.buildCommand}>
+                      {selected.buildCommand}
+                    </span>
                   </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Runtime</dt>
-                    <dd className="text-right text-slate-200">{templateStack(selected)}</dd>
-                  </div>
-                  {selected.deploy?.setup && (
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Setup</dt>
-                      <dd className="truncate font-mono text-slate-200" title={selected.deploy.setup}>
-                        {selected.deploy.setup}
-                      </dd>
-                    </div>
-                  )}
-                  {selected.buildCommand && (
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-slate-500">Build</dt>
-                      <dd className="truncate font-mono text-slate-200" title={selected.buildCommand}>
-                        {selected.buildCommand}
-                      </dd>
-                    </div>
-                  )}
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-slate-500">Deploy</dt>
-                    <dd
-                      className="truncate font-mono text-slate-200"
-                      title={selected.deploy?.command ?? selected.deployCommand}
-                    >
-                      {selected.deploy?.command ?? selected.deployCommand}
-                    </dd>
-                  </div>
-                </dl>
+                )}
+                <div className="kv-row" style={{ padding: "10px 12px" }}>
+                  <span className="k">Deploy</span>
+                  <span
+                    className="v"
+                    title={selected.deploy?.command ?? selected.deployCommand}
+                  >
+                    {selected.deploy?.command ?? selected.deployCommand}
+                  </span>
+                </div>
               </div>
 
               {selected.c3 && (
-                <div>
-                  <span className="mb-1.5 block text-xs font-medium text-slate-300">
+                <div style={{ marginTop: 16 }}>
+                  <span className="card-tt" style={{ display: "block", marginBottom: 7, fontSize: 12 }}>
                     create-cloudflare command
                   </span>
-                  <code className="block rounded-md bg-slate-950 px-3 py-2 font-mono text-[11px] leading-relaxed text-slate-300">
+                  <code className="codebox">
                     npm create cloudflare@latest -- {selected.c3.args.join(" ")}
                   </code>
                 </div>
               )}
 
-              <div>
-                <span className="mb-1.5 block text-xs font-medium text-slate-300">
+              <div style={{ marginTop: 16 }}>
+                <span className="card-tt" style={{ display: "block", marginBottom: 7, fontSize: 12 }}>
                   Files in template ({selected.files.length})
                 </span>
-                <ul className="grid gap-x-6 gap-y-1 font-mono text-[11px] text-slate-400 sm:grid-cols-2">
+                <ul className="grid gap-x-6 gap-y-1" style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--text-3)" }}>
                   {selected.files.map((f) => (
-                    <li key={f} className="truncate">
+                    <li key={f} className="truncate" style={{ paddingLeft: 12, position: "relative" }}>
+                      <span style={{ position: "absolute", left: 0, color: "var(--text-4)" }}>›</span>
                       {f}
                     </li>
                   ))}
@@ -210,18 +189,19 @@ export default function TemplatesBrowser({ templates }: TemplatesBrowserProps) {
               </div>
             </div>
 
-            <div className="flex gap-2 border-t border-slate-800 px-5 py-4">
+            <div className="dlg-foot">
               <button
                 type="button"
                 onClick={() => setSelected(null)}
-                className="rounded-md border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 transition-colors hover:border-slate-500 hover:text-white"
+                className="btn ghost"
               >
                 Close
               </button>
               <Link
                 href={`/?template=${selected.id}`}
                 onClick={() => setSelected(null)}
-                className="flex-1 rounded-md bg-[#f6821f] px-4 py-2 text-center text-xs font-semibold text-slate-950 transition-colors hover:bg-[#ff9436]"
+                className="btn primary"
+                style={{ flex: 1 }}
               >
                 Use this template →
               </Link>

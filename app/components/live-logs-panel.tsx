@@ -47,30 +47,29 @@ interface RenderedEntry {
 
 const MAX_ENTRIES = 200;
 
-const OUTCOME_BADGE: Record<string, string> = {
-  ok: "bg-emerald-500/15 text-emerald-300",
-  error: "bg-red-500/15 text-red-300",
-  canceled: "bg-slate-500/15 text-slate-300",
-  exceededCpu: "bg-red-500/15 text-red-300",
-  unknown: "bg-amber-500/15 text-amber-300",
+const OUTCOME_STYLE: Record<string, { bg: string; fg: string }> = {
+  ok: { bg: "rgba(12,138,92,0.25)", fg: "#7fdab4" },
+  error: { bg: "rgba(179,38,30,0.3)", fg: "#f09b93" },
+  canceled: { bg: "rgba(8,189,184,0.16)", fg: "#7fb5ae" },
+  exceededCpu: { bg: "rgba(179,38,30,0.3)", fg: "#f09b93" },
+  unknown: { bg: "rgba(150,107,3,0.25)", fg: "#e8c478" },
 };
 
-const LEVEL_BADGE: Record<string, string> = {
-  log: "text-slate-300",
-  info: "text-sky-300",
-  debug: "text-slate-500",
-  warn: "text-amber-300",
-  error: "text-red-300",
+const LEVEL_LVL: Record<string, string> = {
+  info: "info",
+  warn: "warn",
+  error: "err",
+  ok: "ok",
 };
 
-const METHOD_BADGE: Record<string, string> = {
-  GET: "text-emerald-300",
-  HEAD: "text-slate-400",
-  POST: "text-amber-300",
-  PUT: "text-sky-300",
-  PATCH: "text-sky-300",
-  DELETE: "text-red-300",
-  OPTIONS: "text-slate-400",
+const METHOD_STYLE: Record<string, string> = {
+  GET: "#7fdab4",
+  HEAD: "#7fb5ae",
+  POST: "#e8c478",
+  PUT: "#7fd3ed",
+  PATCH: "#7fd3ed",
+  DELETE: "#f09b93",
+  OPTIONS: "#7fb5ae",
 };
 
 function stringifyMessage(msg: unknown): string {
@@ -245,8 +244,8 @@ export default function LiveLogsPanel({ projectId, projectType }: LiveLogsPanelP
   if (projectType !== "worker") {
     return (
       <Card>
-        <CardHeader icon={<IconTerminal className="h-4 w-4 text-slate-400" />} title="Live logs" />
-        <p className="px-5 pb-5 text-sm text-slate-500">
+        <CardHeader icon={<IconTerminal className="icon" />} title="Live logs" />
+        <p className="pmute" style={{ padding: "0 18px 18px" }}>
           Live logs are not yet supported for Pages projects.
         </p>
       </Card>
@@ -254,61 +253,51 @@ export default function LiveLogsPanel({ projectId, projectType }: LiveLogsPanelP
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-slate-900/60 px-4 py-2.5">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" />
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
-          </div>
-          <h2 className="font-mono text-xs font-medium uppercase tracking-wide text-slate-400">
+    <div className="wb">
+      <div className="wb-bar">
+        <div className="wb-tabs">
+          <button type="button" className="wb-tab on">
+            <span className="live-dot" />
             live tail
-          </h2>
+          </button>
           {streaming && (
-            <span
-              className={`inline-flex items-center gap-1.5 font-mono text-[11px] ${
-                connected ? "text-emerald-300" : "text-slate-500"
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  connected ? "animate-pulse bg-emerald-400" : "bg-slate-600"
-                }`}
-              />
+            <span style={{ color: connected ? "#63c9a4" : "#7fb5ae", fontFamily: "var(--font-mono)", fontSize: 11 }}>
               {connected ? "LISTENING" : "CONNECTING"}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="wb-live">
           {entries.length > 0 && (
-            <span className="rounded bg-slate-800 px-2 py-0.5 font-mono text-[11px] text-slate-400">
+            <span style={{ color: "#5c8b85", fontFamily: "var(--font-mono)", fontSize: 11 }}>
               {entries.length} {entries.length === 1 ? "event" : "events"}
             </span>
           )}
           {streaming ? (
-            <button
-              type="button"
-              onClick={stop}
-              className="rounded-md border border-red-800 px-2.5 py-1 text-xs text-red-300 hover:border-red-600 hover:text-red-200"
-            >
+            <button type="button" onClick={stop} className="btn danger">
               Stop tail
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={() => void start()}
-              className="rounded-md bg-[#f6821f] px-2.5 py-1 text-xs font-semibold text-slate-950 transition-colors hover:bg-[#ff9436]"
-            >
-              Tail live logs
+            <button type="button" onClick={() => void start()} className="btn primary">
+              Tail live
             </button>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="mx-4 mt-4 rounded-md border border-amber-700/50 bg-amber-950/30 px-3 py-2 font-mono text-xs text-amber-300">
+        <div
+          style={{
+            margin: 12,
+            border: "1px solid rgba(150,107,3,0.35)",
+            background: "rgba(150,107,3,0.12)",
+            padding: "8px 12px",
+            borderRadius: 8,
+            fontFamily: "var(--font-mono)",
+            fontSize: 11.5,
+            color: "#e8c478",
+          }}
+        >
           {error}
         </div>
       )}
@@ -316,84 +305,101 @@ export default function LiveLogsPanel({ projectId, projectType }: LiveLogsPanelP
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
-        className="max-h-96 overflow-y-auto px-4 py-3 font-mono text-xs leading-relaxed"
+        className="wb-body wblog"
+        style={{ height: 320 }}
       >
         {entries.length === 0 ? (
-          <p className="py-4 text-slate-600">
+          <p style={{ color: "#5c8b85", padding: "8px 0" }}>
             {streaming
               ? "Waiting for requests… send a request to your worker and it will appear here."
               : "Start a live tail to see requests hitting this worker in near real-time."}
           </p>
         ) : (
-          entries.map((e) => (
-            <div key={e.id} className="group mb-3 border-b border-slate-800/60 pb-2 last:border-0 last:pb-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-slate-600">{e.at}</span>
-                <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                    OUTCOME_BADGE[e.outcome] ?? OUTCOME_BADGE.unknown
-                  }`}
-                >
-                  {e.outcome}
-                </span>
-                {e.method && (
-                  <span className={`font-semibold ${METHOD_BADGE[e.method] ?? "text-slate-300"}`}>
-                    {e.method}
+          entries.map((e) => {
+            const os = OUTCOME_STYLE[e.outcome] ?? OUTCOME_STYLE.unknown;
+            return (
+              <div
+                key={e.id}
+                style={{
+                  marginBottom: 12,
+                  borderBottom: "1px solid rgba(8,189,184,0.12)",
+                  paddingBottom: 8,
+                }}
+              >
+                <div className="logline">
+                  <span className="ts">{e.at}</span>
+                  <span
+                    className="lvl"
+                    style={{ background: os.bg, color: os.fg, width: "auto", padding: "1px 8px" }}
+                  >
+                    {e.outcome}
                   </span>
-                )}
-                {e.url && <span className="text-slate-300">{e.url}</span>}
-                <button
-                  type="button"
-                  onClick={() => void handleCopyEntry(e)}
-                  className="ml-auto hidden rounded border border-slate-800 px-1.5 py-0.5 text-[10px] text-slate-500 transition-colors hover:border-slate-600 hover:text-slate-300 group-hover:inline-flex"
-                >
-                  Copy
-                </button>
-              </div>
-              {e.logs.length > 0 &&
-                e.logs.map((l, i) => (
-                  <div key={i} className="mt-1 pl-1">
-                    <span className={`font-semibold ${LEVEL_BADGE[l.level] ?? "text-slate-300"}`}>
-                      [{l.level}]
-                    </span>{" "}
-                    <span className="text-slate-200">{l.text}</span>
+                  {e.method && (
+                    <span
+                      style={{
+                        color: METHOD_STYLE[e.method] ?? "#a8d8d1",
+                        fontWeight: 600,
+                        alignSelf: "center",
+                      }}
+                    >
+                      {e.method}
+                    </span>
+                  )}
+                  {e.url && (
+                    <span style={{ color: "#a8d8d1", alignSelf: "center" }}>{e.url}</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => void handleCopyEntry(e)}
+                    className="btn ghost sm"
+                    style={{ marginLeft: "auto" }}
+                  >
+                    Copy
+                  </button>
+                </div>
+                {e.logs.length > 0 &&
+                  e.logs.map((l, i) => (
+                    <div key={i} className="logline">
+                      <span className="ts" />
+                      <span className={`lvl${LEVEL_LVL[l.level] ? ` ${LEVEL_LVL[l.level]}` : ""}`}>
+                        {l.level}
+                      </span>
+                      <span className="msg">{l.text}</span>
+                    </div>
+                  ))}
+                {e.errors.map((err, i) => (
+                  <div key={i} className="logline">
+                    <span className="ts" />
+                    <span className="lvl err">{err.name}</span>
+                    <span className="msg" style={{ color: "#f09b93", whiteSpace: "pre-wrap" }}>
+                      {err.message}
+                      {err.stack ? `\n${err.stack}` : ""}
+                    </span>
                   </div>
                 ))}
-              {e.errors.map((err, i) => (
-                <div key={i} className="mt-1 whitespace-pre-wrap text-red-300">
-                  {err.name}: {err.message}
-                  {err.stack && <span className="block text-red-400/70">{err.stack}</span>}
-                </div>
-              ))}
-            </div>
-          ))
+              </div>
+            );
+          })
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-slate-800/70 bg-slate-900/40 px-4 py-2">
-        <div className="flex items-center gap-3">
-          {entries.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setEntries([])}
-              className="rounded border border-slate-800 px-2 py-0.5 text-[11px] text-slate-500 transition-colors hover:border-slate-600 hover:text-slate-300"
-            >
-              Clear
-            </button>
-          )}
-          {!autoScroll && entries.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setAutoScroll(true)}
-              className="rounded border border-sky-800 px-2 py-0.5 text-[11px] text-sky-300 transition-colors hover:border-sky-600"
-            >
-              Resume autoscroll ↓
-            </button>
-          )}
-          <span className="text-[11px] text-slate-600">
-            Ephemeral · may be sampled under high traffic
+      <div className="wb-cta">
+        {entries.length > 0 && (
+          <button type="button" onClick={() => setEntries([])} className="btn ghost sm">
+            Clear
+          </button>
+        )}
+        {!autoScroll && entries.length > 0 && (
+          <button type="button" onClick={() => setAutoScroll(true)} className="btn outline sm">
+            Resume autoscroll ↓
+          </button>
+        )}
+        <span className="text">Ephemeral · may be sampled under high traffic</span>
+        {streaming && (
+          <span className="text" style={{ marginLeft: "auto" }}>
+            {connected ? "streaming" : "connecting…"}
           </span>
-        </div>
+        )}
       </div>
     </div>
   );

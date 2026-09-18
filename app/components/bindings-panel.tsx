@@ -26,11 +26,11 @@ const TYPE_HINTS: Record<BindingType, string> = {
 };
 
 const TYPE_BADGE: Record<BindingType, string> = {
-  kv: "bg-sky-500/15 text-sky-300",
-  d1: "bg-emerald-500/15 text-emerald-300",
-  r2: "bg-purple-500/15 text-purple-300",
-  turnstile: "bg-teal-500/15 text-teal-300",
-  ai_search: "bg-indigo-500/15 text-indigo-300",
+  kv: "pill info",
+  d1: "pill ok",
+  r2: "pill purple",
+  turnstile: "pill warn",
+  ai_search: "pill flat",
 };
 
 const RESOURCE_NOUN: Record<BindingType, string> = {
@@ -77,33 +77,8 @@ export default function BindingsPanel({ projectId }: BindingsPanelProps) {
   }, [projectId]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const tick = async () => {
-      try {
-        const res = await fetch(`/api/projects/${projectId}/bindings`, { cache: "no-store" });
-        const data = await res.json();
-        if (cancelled) return;
-        if (res.ok) {
-          setBindings(data.bindings ?? []);
-          setResources(data.resources ?? []);
-          setConfigPath(data.configPath ?? null);
-          setError(null);
-        } else {
-          setError(data.error ?? "Failed to load bindings.");
-        }
-      } catch {
-        if (!cancelled) setError("Failed to reach the Launchpad server.");
-      } finally {
-        if (!cancelled) setLoaded(true);
-      }
-    };
-
-    void tick();
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId]);
+    void load();
+  }, [load]);
 
   const typeResources = useMemo(
     () => resources.filter((r) => r.type === type),
@@ -179,59 +154,62 @@ export default function BindingsPanel({ projectId }: BindingsPanelProps) {
   return (
     <Card>
       <CardHeader
-        icon={<IconBox className="h-4 w-4 text-slate-400" />}
+        icon={<IconBox className="icon" />}
         title="Cloudflare bindings"
         count={loaded ? bindings.length : undefined}
         action={
           <button
             type="button"
             onClick={() => void load()}
-            className="inline-flex items-center gap-1 text-xs text-[#ff9436] hover:underline"
+            className="btn ghost sm"
           >
-            <IconRefresh className="h-3.5 w-3.5" />
+            <IconRefresh />
             Refresh
           </button>
         }
       />
 
       {error && (
-        <div className="mx-5 mt-4 rounded-md border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
+        <div className="alert-error" style={{ margin: "0 18px", marginTop: 14 }}>
           {error}
         </div>
       )}
 
       {notice && (
-        <div className="mx-5 mt-4 rounded-md border border-sky-800/50 bg-sky-950/30 px-3 py-2 text-xs text-sky-300">
+        <div className="alert-ok" style={{ margin: "0 18px", marginTop: 14 }}>
           {notice}
         </div>
       )}
 
-      <div className="px-5 py-4">
+      <div style={{ padding: "16px 18px" }}>
         {!loaded ? (
           <SkeletonList rows={2} />
         ) : configPath === null ? (
-          <p className="text-sm text-slate-500">
+          <p className="pmute" style={{ padding: "8px 0" }}>
             No wrangler config file found in this repo — bindings aren&apos;t supported for this
             project type.
           </p>
         ) : bindings.length === 0 ? (
-          <p className="text-sm text-slate-500">No bindings configured yet.</p>
+          <p className="pmute" style={{ padding: "8px 0" }}>
+            No bindings configured yet.
+          </p>
         ) : (
-          <div className="divide-y divide-slate-800/60">
+          <div>
             {bindings.map((b) => (
-              <div key={b.name} className="flex items-center justify-between gap-3 py-2.5">
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${TYPE_BADGE[b.type]}`}>
-                    {b.type}
-                  </span>
-                  <span className="truncate font-mono text-sm text-slate-200">{b.name}</span>
-                  <span className="truncate font-mono text-xs text-slate-500">{b.resource}</span>
+              <div key={b.name} className="binding-row">
+                <span className="b-ico">
+                  <IconBox />
+                </span>
+                <div className="min-w-0" style={{ flex: 1 }}>
+                  <div className="b-t">{b.name}</div>
+                  <div className="b-s truncate">{b.resource}</div>
                 </div>
+                <span className={`pill ${TYPE_BADGE[b.type]}`}>{b.type}</span>
                 <button
                   type="button"
                   onClick={() => handleDelete(b)}
                   disabled={deleting === b.name}
-                  className="shrink-0 rounded-md border border-slate-700 px-2.5 py-1 text-xs text-slate-400 hover:border-red-700 hover:text-red-300 disabled:opacity-60"
+                  className="btn ghost sm danger-hover"
                 >
                   {deleting === b.name ? "…" : "Delete"}
                 </button>
@@ -242,14 +220,21 @@ export default function BindingsPanel({ projectId }: BindingsPanelProps) {
       </div>
 
       {configPath !== null && (
-        <form onSubmit={handleAdd} className="space-y-3 border-t border-slate-800/60 px-5 pt-4 pb-5">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Type</label>
+        <form
+          onSubmit={handleAdd}
+          style={{
+            borderTop: "1px solid var(--np-line)",
+            padding: "16px 18px 18px",
+          }}
+        >
+          <div className="form-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+            <div className="field" style={{ margin: 0 }}>
+              <label htmlFor="bing-type">Type</label>
               <select
+                id="bing-type"
+                className="input"
                 value={type}
                 onChange={(e) => switchType(e.target.value as BindingType)}
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-500"
               >
                 {TYPE_OPTIONS.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -258,24 +243,26 @@ export default function BindingsPanel({ projectId }: BindingsPanelProps) {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Binding name</label>
+            <div className="field" style={{ margin: 0 }}>
+              <label htmlFor="bing-name">Binding name</label>
               <input
+                id="bing-name"
+                className="input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="MY_BUCKET"
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
                 autoCapitalize="none"
                 autoCorrect="off"
               />
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">Resource</label>
+            <div className="field" style={{ margin: 0 }}>
+              <label htmlFor="bing-resource">Resource</label>
               {useExisting ? (
                 <select
+                  id="bing-resource"
+                  className="input"
                   value={existingName}
                   onChange={(e) => setExistingName(e.target.value)}
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-500"
                 >
                   <option value="">Select…</option>
                   {typeResources.map((r) => (
@@ -289,6 +276,8 @@ export default function BindingsPanel({ projectId }: BindingsPanelProps) {
                 </select>
               ) : (
                 <input
+                  id="bing-resource"
+                  className="input"
                   value={resourceName}
                   onChange={(e) => setResourceName(e.target.value)}
                   placeholder={
@@ -300,7 +289,6 @@ export default function BindingsPanel({ projectId }: BindingsPanelProps) {
                           ? "my-search-index"
                           : "my-resource"
                   }
-                  className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
                   autoCapitalize="none"
                   autoCorrect="off"
                 />
@@ -309,68 +297,68 @@ export default function BindingsPanel({ projectId }: BindingsPanelProps) {
           </div>
 
           {type === "turnstile" && !useExisting && (
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-300">
-                Domain <span className="text-slate-500">(optional)</span>
-              </label>
+            <div className="field" style={{ marginTop: 14 }}>
+              <label htmlFor="bing-domain">Domain (optional)</label>
               <input
+                id="bing-domain"
+                className="input"
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
                 placeholder="example.com"
-                className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-slate-500"
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
               />
-              <p className="mt-1 text-[11px] text-slate-500">
+              <span className="help">
                 Defaults to the project&apos;s live URL host. Preview branches get their own
                 per-branch widget automatically.
-              </p>
+              </span>
             </div>
           )}
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="flex items-center gap-2 text-xs text-slate-300">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              marginTop: 14,
+              flexWrap: "wrap",
+            }}
+          >
+            <label className="check">
               <input
                 type="checkbox"
                 checked={useExisting}
                 onChange={(e) => setUseExisting(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-600"
               />
               Use an existing {RESOURCE_NOUN[type]}
             </label>
-            <div className="flex items-center gap-3">
+            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
               {type === "d1" && (
-                <span className="text-[11px] text-slate-500">New databases use the default region.</span>
+                <span className="pmute">New databases use the default region.</span>
               )}
-              <button
-                type="submit"
-                disabled={addDisabled}
-                className="rounded-md bg-[#f6821f] px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              <button type="submit" disabled={addDisabled} className="btn primary">
                 {saving ? "Adding…" : "Add binding"}
               </button>
-            </div>
+            </span>
           </div>
         </form>
       )}
 
-      <div className="mx-5 mb-5 rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs text-slate-500">
+      <div className="note" style={{ margin: "0 18px 18px" }}>
         KV/D1/R2/AI Search bindings are written to{" "}
-        <code className="font-mono text-slate-400">{configPath ?? "wrangler config"}</code> in the
-        repo and applied by the next deploy. Turnstile widgets are delivered as env vars
-        (<code className="font-mono text-slate-400">*_SITE_KEY</code> /{" "}
-        <code className="font-mono text-slate-400">*_SECRET_KEY</code>) and preview branches
-        receive their own widget. Removing a Turnstile widget or AI Search instance also removes
-        the underlying account resource.
+        <code>{configPath ?? "wrangler config"}</code> in the repo and applied by the next
+        deploy. Turnstile widgets are delivered as env vars (<code>*_SITE_KEY</code> /{" "}
+        <code>*_SECRET_KEY</code>) and preview branches receive their own widget. Removing a
+        Turnstile widget or AI Search instance also removes the underlying account resource.
       </div>
 
-      <div className="mx-5 mb-5 rounded-md border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs text-slate-500">
+      <div className="note" style={{ margin: "0 18px 18px" }}>
         You can also provision from pushed code: add a KV/D1/R2 binding without an ID to{" "}
-        <code className="font-mono text-slate-400">wrangler.toml</code> and push — it is created
-        automatically on deploy. AI Search and Turnstile are provisioned by the &quot;Provision
-        resources&quot; step when{" "}
-        <code className="font-mono text-slate-400">provisioning from code</code> is enabled.
+        <code>wrangler.toml</code> and push — it is created automatically on deploy. AI Search
+        and Turnstile are provisioned by the &quot;Provision resources&quot; step when{" "}
+        <code>provisioning from code</code> is enabled.
       </div>
     </Card>
   );

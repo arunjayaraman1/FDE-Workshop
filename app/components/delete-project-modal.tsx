@@ -47,82 +47,107 @@ export default function DeleteProjectModal({ project, onClose, onDeleted }: Dele
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div
-        className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-950 p-5 shadow-xl"
-        role="dialog"
-        aria-modal="true"
-      >
-        <h2 className="text-base font-semibold text-white">Delete {project.name}?</h2>
-        <p className="mt-1 text-sm text-slate-400">
-          This removes the project from Launchpad and deletes the resources you select below.
-          This cannot be undone.
-        </p>
-
-        <div className="mt-4 space-y-2">
-          <label className="flex items-center gap-3 rounded-md border border-slate-800 bg-slate-900/50 px-3 py-2.5 text-sm text-slate-200">
-            <input
-              type="checkbox"
-              checked={deleteRepo}
-              onChange={(e) => setDeleteRepo(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-600"
-            />
-            Delete the GitHub repo{" "}
-            <code className="font-mono text-xs text-slate-400">
-              {project.owner}/{project.repo}
-            </code>
-          </label>
-          <label className="flex items-center gap-3 rounded-md border border-slate-800 bg-slate-900/50 px-3 py-2.5 text-sm text-slate-200">
-            <input
-              type="checkbox"
-              checked={deleteCloudflare}
-              onChange={(e) => setDeleteCloudflare(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-600"
-            />
-            Delete the{" "}
-            {project.provider === "aws" ? (
-              project.type === "amplify" ? "AWS Amplify app" : "AWS Lambda stack"
-            ) : (
-              <>
-                Cloudflare {project.type === "pages" ? "Pages" : "Workers"} project
-              </>
-            )}
-          </label>
-        </div>
-
-        <div className="mt-4">
-          <label className="mb-1 block text-xs font-medium text-slate-300">
-            Type <code className="font-mono">{project.name}</code> to confirm
-          </label>
-          <input
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-slate-500"
-            autoComplete="off"
-            autoFocus
-          />
-        </div>
-
-        {error && (
-          <div className="mt-3 rounded-md border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-            {error}
+    <div className="modal show" role="dialog" aria-modal="true">
+      <div className="backdrop" onClick={onClose} />
+      <div className="dialog sm">
+        <div className="dlg-head">
+          <div>
+            <h3>Delete {project.name}?</h3>
+            <p>
+              This removes the project from Launchpad and deletes the resources you select below.
+              This cannot be undone.
+            </p>
           </div>
-        )}
+          <button type="button" onClick={onClose} aria-label="Close" className="dlg-x">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
 
-        <div className="mt-5 flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={deleting}
-            className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:border-slate-500 disabled:opacity-60"
-          >
+        <div className="dlg-body">
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <label
+              className="check"
+              style={{
+                border: "1px solid var(--np-line)",
+                borderRadius: 11,
+                padding: "12px 14px",
+                width: "100%",
+                alignItems: "flex-start",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={deleteRepo}
+                onChange={(e) => setDeleteRepo(e.target.checked)}
+                style={{ marginTop: 2 }}
+              />
+              <span>
+                Delete the GitHub repo{" "}
+                <span className="url-cell" style={{ display: "inline" }}>
+                  {project.owner}/{project.repo}
+                </span>
+              </span>
+            </label>
+            <label
+              className="check"
+              style={{
+                border: "1px solid var(--np-line)",
+                borderRadius: 11,
+                padding: "12px 14px",
+                width: "100%",
+                alignItems: "flex-start",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={deleteCloudflare}
+                onChange={(e) => setDeleteCloudflare(e.target.checked)}
+                style={{ marginTop: 2 }}
+              />
+              <span>
+                Delete the{" "}
+                {project.provider === "aws" ? (
+                  project.type === "amplify" ? "AWS Amplify app" : "AWS Lambda stack"
+                ) : (
+                  <>
+                    Cloudflare {project.type === "pages" ? "Pages" : "Workers"} project
+                  </>
+                )}
+              </span>
+            </label>
+          </div>
+
+          <div className="field">
+            <label>
+              Type{" "}
+              <span className="url-cell" style={{ display: "inline" }}>
+                {project.name}
+              </span>{" "}
+              to confirm
+            </label>
+            <input
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              className="input"
+              autoComplete="off"
+              autoFocus
+            />
+          </div>
+
+          {error && <div className="alert-error" style={{ marginTop: 14 }}>{error}</div>}
+        </div>
+
+        <div className="dlg-foot">
+          <button type="button" onClick={onClose} disabled={deleting} className="btn ghost">
             Cancel
           </button>
           <button
             type="button"
             onClick={handleDelete}
             disabled={busy}
-            className="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn danger"
           >
             {deleting ? "Deleting…" : "Delete"}
           </button>

@@ -5,13 +5,7 @@ import type { ReactNode } from "react";
 import { copyToClipboard } from "@/lib/format";
 
 export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
-  return (
-    <div
-      className={`rounded-xl border border-slate-800 bg-slate-900/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${className}`}
-    >
-      {children}
-    </div>
-  );
+  return <div className={`card ${className}`}>{children}</div>;
 }
 
 export function CardHeader({
@@ -28,15 +22,11 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={`flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 px-5 py-3 ${className}`}>
-      <h2 className="flex min-w-0 items-center gap-2 text-sm font-medium text-slate-200">
+    <div className={`card-hd ${className}`}>
+      <h2 className="card-tt">
         {icon}
         <span className="truncate">{title}</span>
-        {typeof count === "number" && count > 0 && (
-          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-400">
-            {count}
-          </span>
-        )}
+        {typeof count === "number" && count > 0 && <span className="count">{count}</span>}
       </h2>
       {action}
     </div>
@@ -45,11 +35,32 @@ export function CardHeader({
 
 export function Badge({ className = "", children }: { className?: string; children: ReactNode }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${className}`}
-    >
+    <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--text-3)] ${className}`}>
       {children}
     </span>
+  );
+}
+
+export function PageHead({
+  eyebrow,
+  title,
+  desc,
+  actions,
+}: {
+  eyebrow?: ReactNode;
+  title: string;
+  desc?: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="page-head">
+      <div>
+        {eyebrow && <div className="eyebrow">{eyebrow}</div>}
+        <h1>{title}</h1>
+        {desc && <p className="desc">{desc}</p>}
+      </div>
+      {actions && <div className="page-actions">{actions}</div>}
+    </div>
   );
 }
 
@@ -63,9 +74,9 @@ export function StatTile({
   className?: string;
 }) {
   return (
-    <div className={`bg-slate-900/70 px-4 py-3 ${className}`}>
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="mt-1 text-sm font-medium text-slate-100">{value}</div>
+    <div className={`bg-[var(--surface-2)] px-4 py-3 ${className}`}>
+      <div className="text-xs text-[var(--text-3)]">{label}</div>
+      <div className="mt-1 text-sm font-medium text-[var(--text)]">{value}</div>
     </div>
   );
 }
@@ -80,10 +91,10 @@ export function EmptyState({
   hint?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-1 px-5 py-10 text-center">
-      {icon && <div className="mb-1 text-slate-600">{icon}</div>}
-      <p className="text-sm text-slate-400">{title}</p>
-      {hint && <p className="max-w-sm text-xs text-slate-600">{hint}</p>}
+    <div className="empty" style={{ border: "none" }}>
+      {icon && <div className="mb-1 flex justify-center text-[var(--text-4)]">{icon}</div>}
+      <h4>{title}</h4>
+      {hint && <p className="mx-auto mt-1 max-w-sm text-xs text-[var(--text-3)]">{hint}</p>}
     </div>
   );
 }
@@ -129,9 +140,11 @@ export function CopyButton({
       onClick={() => void copy(text)}
       title={`${label} ${text}`}
       aria-label={`${label} ${text}`}
-      className={`inline-flex shrink-0 items-center justify-center rounded-md border text-xs transition-colors ${
-        iconOnly ? "h-8 w-8 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200" : "gap-1 border-slate-700 px-2 py-1.5 text-slate-300 hover:border-slate-500 hover:text-slate-100"
-      } ${copied ? "!border-emerald-700 !text-emerald-300" : ""}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-md border text-xs font-semibold transition-colors ${
+        iconOnly
+          ? "h-8 w-8 border-[var(--np-line)] text-[var(--text-3)] hover:border-[var(--np-deep-teal)] hover:text-[var(--np-teal-700)]"
+          : "gap-1 border-[var(--np-line)] bg-[var(--surface)] px-2 py-1.5 text-[var(--text-2)] hover:border-[var(--np-deep-teal)] hover:text-[var(--np-teal-700)]"
+      } ${copied ? "!border-[var(--ok-bd)] !text-[#0b7a4e]" : ""}`}
     >
       {copied ? <IconCheck className="h-3.5 w-3.5" /> : <IconCopy className="h-3.5 w-3.5" />}
       {!iconOnly && <span>{copied ? "Copied" : label}</span>}

@@ -19,9 +19,9 @@ export default async function LiveLogsPage({ params }: PageProps<"/projects/[id]
 
   if (project.type !== "worker") {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-[#060d1a] p-8">
+      <div className="flex min-h-dvh items-center justify-center p-8" style={{ background: "var(--surface-2)" }}>
         <div className="max-w-md text-center">
-          <p className="text-slate-400 text-sm">
+          <p className="pmute">
             Live logs are only available for Workers projects. Pages projects do not support live
             tailing yet.
           </p>

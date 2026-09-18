@@ -10,33 +10,42 @@ interface ActivityPanelProps {
   projectName: string;
 }
 
-const ACTION_META: Record<AuditEntry["action"], { label: string; icon: string; color: string }> = {
-  login: { label: "Signed in", icon: "●", color: "text-slate-400" },
-  logout: { label: "Signed out", icon: "●", color: "text-slate-400" },
-  launch: { label: "Project launched", icon: "▲", color: "text-emerald-300" },
-  launch_failed: { label: "Launch failed", icon: "▲", color: "text-red-300" },
-  redeploy: { label: "Re-deploy triggered", icon: "↻", color: "text-sky-300" },
-  delete: { label: "Project deleted", icon: "✕", color: "text-red-300" },
-  env_set: { label: "Env variable set", icon: "＋", color: "text-amber-300" },
-  env_delete: { label: "Env variable removed", icon: "−", color: "text-amber-300" },
-  binding_add: { label: "Binding added", icon: "＋", color: "text-purple-300" },
-  binding_remove: { label: "Binding removed", icon: "−", color: "text-purple-300" },
-  preview_enable: { label: "Previews enabled", icon: "◈", color: "text-emerald-300" },
-  preview_disable: { label: "Previews disabled", icon: "◇", color: "text-emerald-300" },
-  provision_enable: { label: "Provisioning enabled", icon: "◈", color: "text-sky-300" },
-  provision_disable: { label: "Provisioning disabled", icon: "◇", color: "text-sky-300" },
-  config_applied: { label: "Launch config applied", icon: "◈", color: "text-emerald-300" },
-  invite_create: { label: "Invite created", icon: "＋", color: "text-sky-300" },
-  invite_revoke: { label: "Invite revoked", icon: "−", color: "text-amber-300" },
-  invite_accept: { label: "Invite accepted", icon: "✓", color: "text-emerald-300" },
-  member_add: { label: "Member added", icon: "＋", color: "text-emerald-300" },
-  member_remove: { label: "Member removed", icon: "−", color: "text-red-300" },
-  member_role_change: { label: "Member role changed", icon: "◈", color: "text-sky-300" },
-  collaborator_add: { label: "GitHub collaborator added", icon: "◈", color: "text-purple-300" },
-  collaborator_remove: { label: "GitHub collaborator removed", icon: "◇", color: "text-purple-300" },
-  site_access_enable: { label: "Site access enabled", icon: "🔒", color: "text-emerald-300" },
-  site_access_disable: { label: "Site access disabled", icon: "🔓", color: "text-slate-400" },
-  site_access_rotate: { label: "Site access key rotated", icon: "⟳", color: "text-amber-300" },
+const ACTION_META: Record<AuditEntry["action"], { label: string; icon: string; dot: string }> = {
+  login: { label: "Signed in", icon: "●", dot: "flat" },
+  logout: { label: "Signed out", icon: "●", dot: "flat" },
+  launch: { label: "Project launched", icon: "▲", dot: "ok" },
+  launch_failed: { label: "Launch failed", icon: "▲", dot: "err" },
+  redeploy: { label: "Re-deploy triggered", icon: "↻", dot: "info" },
+  delete: { label: "Project deleted", icon: "✕", dot: "err" },
+  env_set: { label: "Env variable set", icon: "＋", dot: "warn" },
+  env_delete: { label: "Env variable removed", icon: "−", dot: "warn" },
+  binding_add: { label: "Binding added", icon: "＋", dot: "purple" },
+  binding_remove: { label: "Binding removed", icon: "−", dot: "purple" },
+  preview_enable: { label: "Previews enabled", icon: "◈", dot: "ok" },
+  preview_disable: { label: "Previews disabled", icon: "◇", dot: "ok" },
+  provision_enable: { label: "Provisioning enabled", icon: "◈", dot: "info" },
+  provision_disable: { label: "Provisioning disabled", icon: "◇", dot: "info" },
+  config_applied: { label: "Launch config applied", icon: "◈", dot: "ok" },
+  invite_create: { label: "Invite created", icon: "＋", dot: "info" },
+  invite_revoke: { label: "Invite revoked", icon: "−", dot: "warn" },
+  invite_accept: { label: "Invite accepted", icon: "✓", dot: "ok" },
+  member_add: { label: "Member added", icon: "＋", dot: "ok" },
+  member_remove: { label: "Member removed", icon: "−", dot: "err" },
+  member_role_change: { label: "Member role changed", icon: "◈", dot: "info" },
+  collaborator_add: { label: "GitHub collaborator added", icon: "◈", dot: "purple" },
+  collaborator_remove: { label: "GitHub collaborator removed", icon: "◇", dot: "purple" },
+  site_access_enable: { label: "Site access enabled", icon: "🔒", dot: "ok" },
+  site_access_disable: { label: "Site access disabled", icon: "🔓", dot: "flat" },
+  site_access_rotate: { label: "Site access key rotated", icon: "⟳", dot: "warn" },
+};
+
+const DOT_COLOR: Record<string, string> = {
+  ok: "#1faf74",
+  info: "#0ea5e9",
+  warn: "#d99a06",
+  err: "#ef4444",
+  purple: "#8a63d2",
+  flat: "var(--text-4)",
 };
 
 export default function ActivityPanel({ projectName }: ActivityPanelProps) {
@@ -62,99 +71,73 @@ export default function ActivityPanel({ projectName }: ActivityPanelProps) {
   }, [projectName]);
 
   useEffect(() => {
-    let cancelled = false;
-    const tick = async () => {
-      try {
-        const res = await fetch(
-          `/api/audit?project=${encodeURIComponent(projectName)}&limit=20`,
-          { cache: "no-store" }
-        );
-        const data = await res.json();
-        if (cancelled) return;
-        if (res.ok) {
-          setAudits(data.audits ?? []);
-          setError(null);
-        } else {
-          setError(data.error ?? "Failed to load activity.");
-        }
-      } catch {
-        if (!cancelled) setError("Failed to reach the Launchpad server.");
-      }
-    };
-    void tick();
-    return () => {
-      cancelled = true;
-    };
-  }, [projectName]);
+    void load();
+  }, [load]);
 
   return (
     <Card>
       <CardHeader
-        icon={<IconActivity className="h-4 w-4 text-slate-400" />}
+        icon={<IconActivity className="icon" />}
         title="Activity"
         count={audits ? audits.length : undefined}
         action={
           <button
             type="button"
             onClick={() => void load()}
-            className="inline-flex items-center gap-1 text-xs text-[#ff9436] hover:underline"
+            className="btn ghost sm"
           >
-            <IconRefresh className="h-3.5 w-3.5" />
+            <IconRefresh />
             Refresh
           </button>
         }
       />
 
       {error && (
-        <div className="mx-5 mt-4 rounded-md border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
+        <div className="alert-error" style={{ margin: "0 18px", marginTop: 14 }}>
           {error}
         </div>
       )}
 
-      <div className="px-5 py-4">
+      <div style={{ padding: "8px 18px 18px" }}>
         {audits === null ? (
           <SkeletonList rows={4} />
         ) : audits.length === 0 ? (
-          <p className="text-sm text-slate-500">
+          <p className="pmute" style={{ padding: "8px 0" }}>
             No activity recorded yet. Deploys, env changes, bindings, and preview toggles will show
             up here.
           </p>
         ) : (
-          <ol className="relative ml-1.5 space-y-4 border-l border-slate-800/70 pl-4">
+          <ul className="tl-mini">
             {audits.map((a, i) => {
               const meta = ACTION_META[a.action] ?? {
                 label: a.action,
                 icon: "●",
-                color: "text-slate-400",
+                dot: "flat",
               };
-              const isLast = i === audits.length - 1;
               return (
-                <li key={i} className="relative">
-                  <span
-                    className={`absolute -left-[22px] top-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-slate-700 bg-slate-950 ${meta.color}`}
-                    title={meta.label}
-                  >
-                    <span className="text-[11px] leading-none">{meta.icon}</span>
-                  </span>
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                    <div className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="text-sm text-slate-200">{meta.label}</span>
-                      <span className="text-xs text-slate-500">{a.actor}</span>
+                <li key={i} className={`tl-row ${meta.dot}`}>
+                  <span className="tl-dot" style={{ background: DOT_COLOR[meta.dot] }} />
+                  <div className="tl-main">
+                    <div className="tl-t">
+                      {meta.icon}
+                      {meta.label}
                     </div>
-                    <time
-                      className="text-xs text-slate-500"
-                      title={formatDateTime(a.at)}
-                      dateTime={a.at}
-                    >
-                      {formatRelative(a.at)}
-                    </time>
+                    <div className="tl-s">
+                      {a.actor}
+                      {a.detail ? ` — ${a.detail}` : ""}
+                    </div>
                   </div>
-                  {a.detail && <p className="mt-0.5 text-xs text-slate-500">{a.detail}</p>}
-                  {!isLast && <span className="sr-only">—</span>}
+                  <time
+                    className="tl-when"
+                    title={formatDateTime(a.at)}
+                    dateTime={a.at}
+                  >
+                    {formatRelative(a.at)}
+                  </time>
                 </li>
               );
             })}
-          </ol>
+          </ul>
         )}
       </div>
     </Card>

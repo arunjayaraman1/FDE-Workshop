@@ -60,16 +60,14 @@ export default function InviteAcceptForm({ token }: InviteAcceptFormProps) {
   }
 
   if (loading) {
-    return <p className="text-sm text-slate-500">Loading invite…</p>;
+    return <p className="pmute">Loading invite…</p>;
   }
 
   if (error && !projectName) {
     return (
-      <div className="space-y-4">
-        <div className="rounded-md border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-          {error}
-        </div>
-        <Link href="/login" className="text-sm text-[#f6821f] hover:underline">
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="alert-error">{error}</div>
+        <Link href="/login" className="link">
           Go to sign in
         </Link>
       </div>
@@ -78,25 +76,30 @@ export default function InviteAcceptForm({ token }: InviteAcceptFormProps) {
 
   if (state && state !== "pending" && !done) {
     return (
-      <div className="rounded-md border border-amber-800/60 bg-amber-950/30 px-3 py-2 text-sm text-amber-300">
-        This invite has already been {state === "accepted" ? "used" : "expired"}.
+      <div className="callout warn" style={{ marginTop: 0 }}>
+        <span className="icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" />
+          </svg>
+        </span>
+        <span>
+          This invite has already been {state === "accepted" ? "used" : "expired"}.
+        </span>
       </div>
     );
   }
 
   if (done) {
     return (
-      <div className="space-y-4">
-        <div className="rounded-md border border-emerald-800 bg-emerald-950/50 px-3 py-2 text-sm text-emerald-300">
-          You&apos;ve joined <span className="font-semibold">{projectName}</span> as a {role}.
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="alert-ok">
+          You&apos;ve joined <span style={{ fontWeight: 600 }}>{projectName}</span> as a {role}.
         </div>
-        <p className="text-sm text-slate-400">
+        <p className="pmute">
           Sign in with the Launchpad password and the username you chose to access the project.
         </p>
-        <Link
-          href="/login"
-          className="inline-block rounded-md bg-[#f6821f] px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436]"
-        >
+        <Link href="/login" className="btn primary lg" style={{ justifyContent: "center" }}>
           Sign in
         </Link>
       </div>
@@ -104,56 +107,53 @@ export default function InviteAcceptForm({ token }: InviteAcceptFormProps) {
   }
 
   return (
-    <form onSubmit={handleAccept} className="space-y-4">
-      <div className="rounded-md border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm text-slate-300">
-        You&apos;ve been invited to <span className="font-semibold">{projectName}</span> as a{" "}
-        <span className="text-[#f6821f]">{role}</span>.
+    <form onSubmit={handleAccept}>
+      <div className="callout info" style={{ marginTop: 0, marginBottom: 18, textAlign: "left" }}>
+        <span className="icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 21h18" />
+            <path d="M5 21V7l7-4 7 4v14" />
+            <path d="M9 21v-4h6v4" />
+            <path d="M9 11h6" />
+          </svg>
+        </span>
+        <span>
+          You&apos;ve been invited to{" "}
+          <span style={{ fontWeight: 700 }}>{projectName}</span> as a{" "}
+          <span style={{ fontWeight: 700, color: "var(--np-teal-700)" }}>{role}</span>.
+        </span>
       </div>
 
-      <div>
-        <label className="mb-1 block text-xs font-medium text-slate-300">
-          Choose a username
-        </label>
+      <div className="field">
+        <label>Choose a username</label>
         <input
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="e.g. jane-doe"
           autoComplete="username"
           autoFocus
-          className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
+          className="input"
         />
-        <p className="mt-1 text-[11px] text-slate-500">
-          Lowercase letters, numbers, dots, dashes or underscores.
-        </p>
+        <span className="help">Lowercase letters, numbers, dots, dashes or underscores.</span>
       </div>
 
-      <div>
-        <label className="mb-1 block text-xs font-medium text-slate-300">
-          GitHub username (optional)
-        </label>
+      <div className="field">
+        <label>GitHub username (optional)</label>
         <input
           value={githubUsername}
           onChange={(e) => setGithubUsername(e.target.value)}
           placeholder="Your GitHub handle"
           autoComplete="off"
-          className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none focus:border-slate-500"
+          className="input"
         />
-        <p className="mt-1 text-[11px] text-slate-500">
+        <span className="help">
           Adding this invites you as a collaborator on the project&apos;s GitHub repo.
-        </p>
+        </span>
       </div>
 
-      {error && (
-        <div className="rounded-md border border-red-800 bg-red-950/50 px-3 py-2 text-sm text-red-300">
-          {error}
-        </div>
-      )}
+      {error && <div className="alert-error">{error}</div>}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full rounded-md bg-[#f6821f] px-4 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-[#ff9436] disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <button type="submit" disabled={submitting} className="btn primary lg" style={{ width: "100%", justifyContent: "center" }}>
         {submitting ? "Joining…" : "Accept invite"}
       </button>
     </form>

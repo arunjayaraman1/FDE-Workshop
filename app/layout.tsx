@@ -1,34 +1,45 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import Sidebar from "./components/sidebar";
+import Topbar from "./components/topbar";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "Cloudflare Launchpad",
-  description: "Scaffold projects, push to GitHub, and deploy to Cloudflare via GitHub Actions.",
+  title: "Launchpad — Newpage SaaS",
+  description:
+    "Scaffold projects, push to GitHub, and deploy to Cloudflare via GitHub Actions.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${spaceGrotesk.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <div className="min-h-dvh">
+        <div className="app">
           <Sidebar />
-          <div className="lg:pl-[var(--sidebar-w,16rem)] transition-[padding] duration-200">
-            <main className="pt-16 lg:pt-0">{children}</main>
+          <div className="main">
+            <Topbar />
+            <main className="main-inner">{children}</main>
           </div>
         </div>
       </body>

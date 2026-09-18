@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getProject } from "@/lib/store";
 import { getSessionUser } from "@/lib/auth";
 import { requireProjectRole } from "@/lib/membership";
+import { PageHead } from "../../../components/ui";
 import MembersPanel from "../../../components/members-panel";
 
 export const dynamic = "force-dynamic";
@@ -22,29 +23,29 @@ export default async function ProjectMembersPage({
   if (!access.ok) notFound();
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-10">
-      <div className="mb-6 flex items-center gap-1.5 text-xs text-slate-500">
-        <Link href="/projects" className="transition-colors hover:text-[#f6821f]">
-          Projects
-        </Link>
-        <span>/</span>
-        <Link
-          href={`/projects/${project.id}`}
-          className="transition-colors hover:text-[#f6821f]"
-        >
-          {project.name}
-        </Link>
-        <span>/</span>
-        <span className="text-slate-300">Members</span>
-      </div>
-
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-white">Members</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Who can access <span className="text-slate-200">{project.name}</span> in Launchpad and
-          on GitHub.
-        </p>
-      </div>
+    <div>
+      <PageHead
+        eyebrow={
+          <span>
+            <Link href="/projects" className="link">
+              Projects
+            </Link>{" "}
+            /{" "}
+            <Link href={`/projects/${project.id}`} className="link">
+              {project.name}
+            </Link>{" "}
+            / Members
+          </span>
+        }
+        title="Members"
+        desc={
+          <>
+            Who can access{" "}
+            <span style={{ fontWeight: 600, color: "var(--text-2)" }}>{project.name}</span> in
+            Launchpad and on GitHub.
+          </>
+        }
+      />
 
       <MembersPanel
         projectId={project.id}

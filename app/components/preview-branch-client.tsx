@@ -46,11 +46,11 @@ interface PreviewBranchDetail {
 }
 
 const RESOURCE_STYLE: Record<string, string> = {
-  kv: "bg-sky-500/15 text-sky-300",
-  d1: "bg-emerald-500/15 text-emerald-300",
-  r2: "bg-purple-500/15 text-purple-300",
-  turnstile: "bg-teal-500/15 text-teal-300",
-  ai_search: "bg-indigo-500/15 text-indigo-300",
+  kv: "pill info",
+  d1: "pill ok",
+  r2: "pill purple",
+  turnstile: "pill warn",
+  ai_search: "pill flat",
 };
 
 const RESOURCE_LABEL: Record<string, string> = {
@@ -62,17 +62,17 @@ const RESOURCE_LABEL: Record<string, string> = {
 };
 
 function deployState(run: PreviewDeployRun | null): { label: string; cls: string } {
-  if (!run) return { label: "No runs yet", cls: "bg-slate-700/30 text-slate-400" };
+  if (!run) return { label: "No runs yet", cls: "pill flat" };
   const c = run.conclusion;
   const s = run.status;
-  if (c === "success") return { label: "Success", cls: "bg-emerald-500/15 text-emerald-300" };
+  if (c === "success") return { label: "Success", cls: "pill ok" };
   if (c === "failure" || c === "timed_out" || c === "startup_failure")
-    return { label: "Failed", cls: "bg-red-500/15 text-red-300" };
-  if (c === "cancelled") return { label: "Cancelled", cls: "bg-amber-500/15 text-amber-300" };
+    return { label: "Failed", cls: "pill err" };
+  if (c === "cancelled") return { label: "Cancelled", cls: "pill warn" };
   if (s === "in_progress" || s === "queued" || s === "pending" || s === "requested" || s === "waiting")
-    return { label: s.replace(/_/g, " "), cls: "bg-amber-500/15 text-amber-300" };
-  if (c) return { label: c.replace(/_/g, " "), cls: "bg-slate-700/30 text-slate-400" };
-  return { label: s.replace(/_/g, " "), cls: "bg-slate-700/30 text-slate-400" };
+    return { label: s.replace(/_/g, " "), cls: "pill info pulse" };
+  if (c) return { label: c.replace(/_/g, " "), cls: "pill flat" };
+  return { label: s.replace(/_/g, " "), cls: "pill flat" };
 }
 
 interface PreviewBranchClientProps {
@@ -115,74 +115,88 @@ export default function PreviewBranchClient({ projectId, branch }: PreviewBranch
   const deploy = detail ? deployState(detail.deploy) : null;
 
   return (
-    <div className="fixed inset-y-0 right-0 left-0 top-16 z-20 flex flex-col bg-[#040a14] lg:top-0 lg:left-[var(--sidebar-w,16rem)]">
-      <div className="flex items-center justify-between border-b border-slate-800/70 bg-[#080f1e] px-6 py-3.5">
+    <div
+      className="fixed inset-y-0 right-0 left-0 top-16 z-20 flex flex-col lg:top-0 lg:left-[var(--sidebar-w,16rem)]"
+      style={{ background: "#042422" }}
+    >
+      <div
+        className="flex items-center justify-between border-b px-6 py-3.5"
+        style={{ borderColor: "rgba(8,189,184,0.18)", background: "#06302e" }}
+      >
         <div className="flex items-center gap-4">
           <Link
             href={`/projects/${projectId}`}
-            className="flex items-center gap-2 text-sm text-slate-400 transition-colors hover:text-slate-200"
+            className="flex items-center gap-2 text-sm transition-colors hover:brightness-125"
+            style={{ color: "#7fb5ae" }}
           >
             <IconArrowLeft className="h-4 w-4" />
             Back to project
           </Link>
-          <span className="h-5 w-px bg-slate-800" />
-          <div className="flex items-center gap-2.5">
-            <IconTerminal className="h-4 w-4 text-slate-400" />
-            <span className="text-sm font-semibold text-slate-200">Preview Branch</span>
-            <span className="rounded-md border border-[#f6821f]/25 bg-[#f6821f]/10 px-2 py-0.5 font-mono text-[11px] text-[#f6821f]">
+          <span className="h-5 w-px" style={{ background: "rgba(8,189,184,0.18)" }} />
+          <div className="flex items-center gap-2.5" style={{ color: "#7fb5ae" }}>
+            <IconTerminal className="h-4 w-4" />
+            <span className="text-sm font-semibold" style={{ color: "#d7f0ec" }}>Preview Branch</span>
+            <span
+              className="rounded-md border px-2 py-0.5 font-mono text-[11px]"
+              style={{ borderColor: "rgba(8,189,184,0.35)", background: "rgba(8,189,184,0.1)", color: "#7fdad7" }}
+            >
               {branch}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" style={{ background: "#042422" }}>
         <div className="mx-auto max-w-3xl px-6 py-6">
           {error && (
-            <div className="mb-4 rounded-md border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
-              {error}
+            <div className="callout warn" style={{ marginTop: 0, marginBottom: 16 }}>
+              <span className="icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4M12 16h.01" />
+                </svg>
+              </span>
+              <span>{error}</span>
             </div>
           )}
 
           {!loaded ? (
             <Card>
               <CardHeader title={branch} />
-              <div className="p-5">
+              <div className="card-bd">
                 <SkeletonList rows={4} />
               </div>
             </Card>
           ) : detail ? (
-            <div className="space-y-4">
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <Card>
-                <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
-                  <div className="flex min-w-0 items-center gap-2.5">
+                <div className="card-bd pb-4" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ display: "flex", minWidth: 0, alignItems: "center", gap: 10 }}>
                     <span
-                      className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                        detail.running
-                          ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
-                          : "bg-slate-600"
-                      }`}
+                      className="pdot"
+                      style={{
+                        width: 11,
+                        height: 11,
+                        background: detail.running ? "#1faf74" : "var(--text-4)",
+                        boxShadow: detail.running ? "0 0 8px rgba(31,175,116,0.7)" : "none",
+                        borderRadius: 99,
+                        flexShrink: 0,
+                      }}
                     />
-                    <h1 className="truncate font-mono text-lg font-semibold text-slate-100">
+                    <h1 className="url-cell" style={{ fontSize: 17, fontWeight: 700 }}>
                       {detail.branch}
                     </h1>
-                    <Badge
-                      className={
-                        detail.running
-                          ? "bg-emerald-500/15 text-emerald-300"
-                          : "bg-slate-700/30 text-slate-400"
-                      }
-                    >
+                    <Badge className={detail.running ? "pill ok" : "pill flat"}>
                       {detail.running ? "Live" : "Not deployed"}
                     </Badge>
                   </div>
                   {detail.url && (
-                    <div className="flex items-center gap-2">
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                       <a
                         href={detail.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-md bg-[#f6821f] px-3 py-1.5 text-xs font-semibold text-slate-950 hover:bg-[#ff9436]"
+                        className="btn primary sm"
                       >
                         <IconExternal className="h-3.5 w-3.5" />
                         Open preview
@@ -191,103 +205,113 @@ export default function PreviewBranchClient({ projectId, branch }: PreviewBranch
                     </div>
                   )}
                 </div>
-                <div className="border-t border-slate-800/80 px-5 py-3">
-                  <p className="truncate font-mono text-xs text-slate-500">{detail.previewName}</p>
+                <div style={{ borderTop: "1px solid var(--np-line)", padding: "14px 18px" }}>
+                  <p className="url-cell">{detail.previewName}</p>
                   {!detail.running && (
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="pmute" style={{ marginTop: 8 }}>
                       No preview deployed for this branch yet. Push a commit to{" "}
-                      <code className="font-mono text-slate-300">{detail.branch}</code> to spin one
-                      up.
+                      <code className="url-cell" style={{ display: "inline" }}>{detail.branch}</code>{" "}
+                      to spin one up.
                     </p>
                   )}
                 </div>
               </Card>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div style={{ display: "grid", gap: 16 }} className="md:grid-cols-2">
                 <Card>
                   <CardHeader title="Worker" />
-                  <dl className="divide-y divide-slate-800/60">
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <dt className="text-xs text-slate-500">Status</dt>
-                      <dd className="text-sm font-medium text-slate-200">
-                        {detail.running ? "Running" : "Not deployed"}
-                      </dd>
+                  <div style={{ padding: "6px 18px" }}>
+                    <div className="kv-row">
+                      <span className="k">Status</span>
+                      <span style={{ flex: 1 }}>{detail.running ? "Running" : "Not deployed"}</span>
                     </div>
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <dt className="text-xs text-slate-500">Created</dt>
-                      <dd className="text-right text-sm text-slate-300">
+                    <div className="kv-row">
+                      <span className="k">Created</span>
+                      <span style={{ flex: 1, textAlign: "right" }}>
                         {detail.worker
                           ? `${formatRelative(detail.worker.createdOn)} · ${formatDateTime(detail.worker.createdOn)}`
                           : "—"}
-                      </dd>
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <dt className="text-xs text-slate-500">Last modified</dt>
-                      <dd className="text-right text-sm text-slate-300">
+                    <div className="kv-row">
+                      <span className="k">Last modified</span>
+                      <span style={{ flex: 1, textAlign: "right" }}>
                         {detail.worker
                           ? `${formatRelative(detail.worker.modifiedOn)} · ${formatDateTime(detail.worker.modifiedOn)}`
                           : "—"}
-                      </dd>
+                      </span>
                     </div>
-                  </dl>
+                  </div>
                 </Card>
 
                 <Card>
                   <CardHeader title="Deploy" />
-                  <dl className="divide-y divide-slate-800/60">
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <dt className="text-xs text-slate-500">Latest run</dt>
-                      <dd>
+                  <div style={{ padding: "6px 18px" }}>
+                    <div className="kv-row">
+                      <span className="k">Latest run</span>
+                      <span style={{ flex: 1, textAlign: "right" }}>
                         {deploy && <Badge className={deploy.cls}>{deploy.label}</Badge>}
-                        {!deploy && <span className="text-sm text-slate-500">—</span>}
-                      </dd>
+                        {!deploy && "—"}
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <dt className="text-xs text-slate-500">Updated</dt>
-                      <dd className="text-sm text-slate-300">
+                    <div className="kv-row">
+                      <span className="k">Updated</span>
+                      <span style={{ flex: 1, textAlign: "right" }}>
                         {detail.deploy ? formatRelative(detail.deploy.updatedAt) : "—"}
-                      </dd>
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between px-5 py-3">
-                      <dt className="text-xs text-slate-500">Run</dt>
-                      <dd>
+                    <div className="kv-row">
+                      <span className="k">Run</span>
+                      <span style={{ flex: 1, textAlign: "right" }}>
                         {detail.deploy ? (
                           <a
                             href={detail.deploy.htmlUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 font-mono text-xs text-[#ff9436] hover:underline"
+                            className="link"
+                            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
                           >
                             #{detail.deploy.runId}
                             <IconGitHub className="h-3.5 w-3.5" />
                           </a>
                         ) : (
-                          <span className="text-sm text-slate-500">—</span>
+                          "—"
                         )}
-                      </dd>
+                      </span>
                     </div>
-                  </dl>
+                  </div>
                 </Card>
 
                 <Card>
                   <CardHeader title="Resources" count={detail.resources.length} />
-                  <div className="px-5 py-4">
+                  <div className="card-bd">
                     {detail.resources.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {detail.resources.map((r) => (
                           <span
                             key={`${r.type}:${r.id}`}
-                            className={`inline-flex items-center gap-1.5 rounded px-2 py-1 font-mono text-xs ${RESOURCE_STYLE[r.type] ?? "bg-slate-800 text-slate-300"}`}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 6,
+                              borderRadius: 8,
+                              padding: "4px 10px",
+                              fontFamily: "var(--font-mono)",
+                              fontSize: 12,
+                              background: "var(--surface-2)",
+                              border: "1px solid var(--np-line)",
+                              color: "var(--text-2)",
+                            }}
                           >
                             {r.name}
-                            <span className="text-[10px] opacity-70">
+                            <span style={{ fontSize: 10, opacity: 0.7 }}>
                               {RESOURCE_LABEL[r.type] ?? r.type}
                             </span>
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-500">
+                      <p className="pmute">
                         No per-branch KV, D1, R2, AI Search, or Turnstile resources provisioned.
                       </p>
                     )}
@@ -296,20 +320,17 @@ export default function PreviewBranchClient({ projectId, branch }: PreviewBranch
 
                 <Card>
                   <CardHeader title="Environment" count={detail.secrets.length} />
-                  <div className="px-5 py-4">
+                  <div className="card-bd">
                     {detail.secrets.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                         {detail.secrets.map((s) => (
-                          <span
-                            key={s}
-                            className="inline-flex items-center gap-1.5 rounded bg-slate-800/80 px-2 py-1 font-mono text-xs text-slate-300"
-                          >
+                          <span key={s} className="kv-chip">
                             {s}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-500">
+                      <p className="pmute">
                         No secrets set on this preview worker. It uses the same environment
                         variables as this project.
                       </p>
@@ -319,48 +340,58 @@ export default function PreviewBranchClient({ projectId, branch }: PreviewBranch
               </div>
 
               <Card>
-                <CardHeader title="Branch" action={detail.git && (
-                  <a
-                    href={detail.git.htmlUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-[#ff9436] hover:underline"
-                  >
-                    <IconGitHub className="h-3.5 w-3.5" />
-                    Latest commit
-                  </a>
-                )} />
-                <div className="px-5 py-4">
+                <CardHeader
+                  title="Branch"
+                  action={detail.git && (
+                    <a
+                      href={detail.git.htmlUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="link"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                    >
+                      <IconGitHub className="h-3.5 w-3.5" />
+                      Latest commit
+                    </a>
+                  )}
+                />
+                <div className="card-bd">
                   {detail.git ? (
-                    <div className="space-y-2">
-                      <p className="truncate text-sm text-slate-200">
-                        <span className="mr-2 rounded bg-slate-800 px-1.5 py-0.5 font-mono text-xs text-slate-400">
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <p className="url-cell" style={{ color: "var(--text)", fontSize: 13 }}>
+                        <span className="kv-chip" style={{ marginRight: 8 }}>
                           {shortSha(detail.git.sha)}
                         </span>
                         {detail.git.message.split("\n")[0]}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="pmute">
                         {detail.git.authorName ?? "Unknown author"} ·{" "}
                         {formatRelative(detail.git.authorDate)} ·{" "}
                         {formatDateTime(detail.git.authorDate)}
                       </p>
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500">Branch info unavailable.</p>
+                    <p className="pmute">Branch info unavailable.</p>
                   )}
                 </div>
               </Card>
 
               {detail.warnings.length > 0 && (
-                <div className="rounded-md border border-amber-700/50 bg-amber-950/30 px-3 py-2 text-xs text-amber-300">
-                  {detail.warnings.join(" ")}
+                <div className="callout warn" style={{ marginTop: 0 }}>
+                  <span className="icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 8v4M12 16h.01" />
+                    </svg>
+                  </span>
+                  <span>{detail.warnings.join(" ")}</span>
                 </div>
               )}
             </div>
           ) : (
             <Card>
               <CardHeader title={branch} />
-              <p className="px-5 pb-5 text-sm text-slate-500">No details available.</p>
+              <p className="pmute" style={{ padding: "0 18px 18px" }}>No details available.</p>
             </Card>
           )}
         </div>

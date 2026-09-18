@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Launchpad — Interactive Product Prototype</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════
+   LAUNCHPAD — interactive presentation prototype (dark slate theme)
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#020617; --panel:#0f172a; --panel-2:#0b1220; --panel-3:#111c33;
+  --line:#1e293b; --line-2:#334155; --line-soft:rgba(30,41,59,.55);
+  --text:#f1f5f9; --muted:#94a3b8; --dim:#64748b; --faint:#475569;
+  --accent:#f6821f; --accent-hi:#ff9436; --accent-deep:#b85c10;
+  --amber:#fbbf24; --sky:#38bdf8; --emerald:#34d399; --red:#f87171;
+  --purple:#c4b5fd; --teal:#2dd4bf; --indigo:#a5b4fc;
+  --font-sans:'Geist','Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'Geist Mono',ui-monospace,SFMono-Regular,monospace;
+  --sbw:240px; --tw:64px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%}
+body{background:
+  radial-gradient(1200px 600px at 70% -10%, rgba(246,130,31,.06), transparent 60%),
+  var(--bg);
+  color:var(--text);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(246,130,31,.3)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#1e293b;border-radius:99px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit;font-size:14px}
+h1,h2,h3{letter-spacing:-.01em}
+.mono{font-family:var(--font-mono)}
+
+/* ── layout shell ─────────────────────────────────────────────── */
+#app{min-height:100vh}
+#view{transition:margin .2s}
+body.signed #view{margin-left:var(--sbw);padding-left:0}
+body.collapsed #view{margin-left:var(--tw)}
+#sidebar{position:fixed;inset:0 auto 0 0;width:var(--sbw);background:rgba(2,6,23,.9);
+  border-right:1px solid var(--line-soft);display:flex;flex-direction:column;z-index:40;
+  transition:width .2s,transform .2s}
+body.collapsed #sidebar{width:var(--tw)}
+body.collapsed #sidebar .sb-label,body.collapsed #sidebar .sb-brand-txt{opacity:0;pointer-events:none;width:0;display:none}
+.tb{position:fixed;inset:0 0 auto 0;height:52px;background:rgba(2,6,23,.85);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line-soft);display:none;align-items:center;gap:10px;padding:0 14px;z-index:45}
+
+/* ── buttons ──────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;
+  border-radius:8px;font-size:13px;font-weight:600;height:34px;padding:0 13px;white-space:nowrap;
+  transition:all .14s;flex-shrink:0;cursor:pointer;background:none;color:var(--text)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:#0b0b0b}
+.btn.primary:hover{background:var(--accent-hi)}
+.btn.primary.wood{color:#fff;background:linear-gradient(90deg,#f6821f,#c06010);box-shadow:0 2px 14px rgba(246,130,31,.35)}
+.btn.primary.wood:hover{filter:brightness(1.07)}
+.btn.ghost{border-color:var(--line-2);color:var(--muted)}
+.btn.ghost:hover{border-color:var(--line-2);color:#fff;background:#1e293b}
+.btn.danger{background:#b91c1c;color:#fff}
+.btn.danger:hover{background:#dc2626}
+.btn.sm{height:28px;font-size:12px;padding:0 9px;border-radius:7px}
+.btn.xs{height:24px;font-size:11px;padding:0 7px;border-radius:6px}
+.icon-btn{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:8px;
+  border:1px solid var(--line-2);background:rgba(15,23,42,.5);color:var(--muted);transition:all .14s;flex-shrink:0}
+.icon-btn:hover{color:#fff;border-color:var(--line-2)}
+.icon-btn.danger:hover{color:var(--red);border-color:rgba(248,113,113,.4)}
+.icon-btn.sm{width:22px;height:22px;border-radius:6px}
+.icon-btn.sm .icon{width:12px;height:12px}
+.icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ── sidebar ──────────────────────────────────────────────────── */
+.sb-head{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--line-soft)}
+.sb-logo{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,#f6821f,#b85c10);color:#0b0b0b;font-weight:800;font-size:12px;flex-shrink:0}
+.sb-brand{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:600;font-size:13px}
+.sb-nav{padding:10px 10px;display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto}
+.navlink{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:9px;color:var(--muted);
+  font-size:13px;font-weight:500;transition:all .12s}
+.navlink:hover{color:#e2e8f0;background:#0f172a}
+.navlink.active{background:#1e293b;color:#fff}
+.navlink.active .icon{color:var(--accent)}
+.navlink.play .icon{color:var(--accent)}
+.sb-foot{padding:8px 10px 12px;border-top:1px solid var(--line-soft);display:flex;flex-direction:column;gap:2px}
+.collapse-handle{position:absolute;top:50%;right:-13px;transform:translateY(-50%);width:24px;height:48px;
+  border:1px solid var(--line-2);background:#1e293b;color:#cbd5e1;border-radius:0 8px 8px 0;cursor:pointer;
+  display:grid;place-items:center;transition:all .15s;z-index:41}
+.collapse-handle:hover{color:var(--accent-hi);border-color:var(--accent)}
+body.collapsed .collapse-handle{right:-13px}
+body.collapsed .collapse-handle .icon{transform:scaleX(-1)}
+
+/* ── page scaffolding ─────────────────────────────────────────── */
+.page{max-width:1024px;margin:0 auto;padding:40px 24px 80px}
+.page.wide{max-width:1200px}
+.page-narrow{max-width:768px;margin:0 auto;padding:40px 24px 80px}
+.pagehead{margin-bottom:22px}
+.pagehead h1{font-size:24px;font-weight:650;margin:0 0 4px}
+.pagehead .sub{color:var(--dim);font-size:13.5px}
+.pagehead .row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+
+/* ── cards / panels ───────────────────────────────────────────── */
+.card{background:rgba(15,23,42,.55);border:1px solid var(--line-soft);border-radius:12px}
+.card-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line-soft)}
+.card-head .ttl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:flex;align-items:center;gap:8px}
+.card-body{padding:18px}
+
+/* ── pills / badges / chips ───────────────────────────────────── */
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border-radius:99px;
+  padding:2px 10px;border:1px solid transparent;white-space:nowrap;line-height:1.55}
+.pill .dot{width:6px;height:6px;border-radius:99px;flex-shrink:0}
+.pill.pulse .dot{animation:pl 1.3s ease-in-out infinite}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:.25}}
+.pill.amber{color:#fcd34d;background:rgba(251,191,36,.10);border-color:rgba(251,191,36,.28)}
+.pill.sky{color:#7dd3fc;background:rgba(56,189,248,.10);border-color:rgba(56,189,248,.28)}
+.pill.emerald{color:#6ee7b7;background:rgba(52,211,153,.10);border-color:rgba(52,211,153,.28)}
+.pill.red{color:#fca5a5;background:rgba(248,113,113,.10);border-color:rgba(248,113,113,.28)}
+.pill.slate{color:#94a3b8;background:rgba(148,163,184,.08);border-color:rgba(148,163,184,.2)}
+.pill.purple{color:#ddd6fe;background:rgba(196,181,253,.10);border-color:rgba(196,181,253,.26)}
+.pill.teal{color:#99f6e4;background:rgba(45,212,191,.10);border-color:rgba(45,212,191,.26)}
+.pill.indigo{color:#c7d2fe;background:rgba(165,180,252,.10);border-color:rgba(165,180,252,.26)}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.05em;border-radius:6px;padding:2px 8px;border:1px solid var(--line);color:var(--muted);background:#111c33}
+.chip.c3{color:var(--teal);background:rgba(45,212,191,.08);border-color:rgba(45,212,191,.3)}
+.chip.aws{color:var(--purple);background:rgba(196,181,253,.08);border-color:rgba(196,181,253,.3)}
+.chip.soon{color:var(--amber);background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.3)}
+.chip.amber{color:var(--amber)}
+.chip.sky{color:var(--sky)}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px}
+
+/* ── inputs / forms ───────────────────────────────────────────── */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:600;color:#cbd5e1;margin-bottom:6px}
+.field .help{display:block;font-size:11px;color:var(--dim);margin-top:5px}
+.input{width:100%;padding:8px 12px;font-size:13.5px;color:#e2e8f0;background:#0b1220;
+  border:1px solid #1e293b;border-radius:8px;outline:none;transition:border-color .12s,box-shadow .12s}
+.input::placeholder{color:#475569}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(246,130,31,.14)}
+select.input{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#64748b 50%),linear-gradient(135deg,#64748b 50%,transparent 50%);
+  background-position:calc(100% - 15px) 55%,calc(100% - 10px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+input[type=radio]{accent-color:var(--accent)}
+.optrow{display:flex;gap:8px}
+.opt{flex:1;text-align:center;padding:9px;border:1px solid var(--line);border-radius:8px;color:var(--dim);
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .12s;background:transparent}
+.opt.on{border-color:var(--accent);background:#1e293b;color:#fff}
+.opt:hover{border-color:var(--line-2)}
+.toggle{position:relative;width:36px;height:20px;border-radius:99px;border:1px solid var(--line-2);background:#0b1220;transition:all .16s;cursor:pointer;flex-shrink:0}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:99px;background:#64748b;transition:all .16s}
+.toggle.on{background:rgba(246,130,31,.25);border-color:var(--accent)}
+.toggle.on::after{left:18px;background:var(--accent)}
+.errbox{display:flex;align-items:center;gap:8px;border:1px solid rgba(248,113,113,.4);background:rgba(127,29,29,.25);
+  color:#fecaca;border-radius:9px;padding:9px 12px;font-size:12.5px;margin-bottom:14px}
+.okbox{display:flex;align-items:center;gap:8px;border:1px solid rgba(52,211,153,.35);background:rgba(6,78,59,.25);
+  color:#a7f3d0;border-radius:9px;padding:9px 12px;font-size:12.5px;margin-bottom:14px}
+.infobox{display:flex;align-items:center;gap:8px;border:1px solid rgba(56,189,248,.3);background:rgba(12,74,110,.3);
+  color:#bae6fd;border-radius:9px;padding:9px 12px;font-size:12.5px;margin-bottom:14px}
+.amberbox{display:flex;align-items:center;gap:8px;border:1px solid rgba(251,191,36,.35);background:rgba(120,53,15,.3);
+  color:#fde68a;border-radius:9px;padding:9px 12px;font-size:12.5px;margin-bottom:14px}
+
+/* ── tables ───────────────────────────────────────────────────── */
+.tblwrap{overflow-x:auto;border:1px solid var(--line-soft);border-radius:12px;background:rgba(15,23,42,.4)}
+table.tbl{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
+.tbl thead th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);font-weight:600;
+  padding:11px 16px;border-bottom:1px solid var(--line);background:rgba(15,23,42,.6);white-space:nowrap}
+.tbl tbody td{padding:11px 16px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+.tbl tbody tr{transition:background .1s}
+.tbl tbody tr:hover{background:rgba(15,23,42,.7)}
+.iconlink{display:inline-flex;align-items:center;gap:5px;color:var(--muted);transition:color .12s}
+.iconlink:hover{color:var(--accent-hi)}
+a.accent{color:var(--accent-hi)}
+.code{font-family:var(--font-mono);font-size:12px;color:var(--sky)}
+
+/* ── tabs ─────────────────────────────────────────────────────── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line-soft);overflow-x:auto}
+.tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--dim);border-bottom:2px solid transparent;
+  white-space:nowrap;cursor:pointer;transition:all .12s;background:none;border-top:none;border-left:none;border-right:none}
+.tab:hover{color:#cbd5e1}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── modal ────────────────────────────────────────────────────── */
+.modal-backdrop{position:fixed;inset:0;z-index:90;background:rgba(2,6,23,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#0b1220;border:1px solid var(--line);border-radius:14px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7);
+  max-height:88vh;display:flex;flex-direction:column;overflow:hidden;animation:pop .18s ease}
+@keyframes pop{from{transform:scale(.97);opacity:0}}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line-soft)}
+.modal-head h2{font-size:15px;margin:0 0 3px}
+.modal-head .sub{font-size:12px;color:var(--dim)}
+.modal-body{padding:18px 20px;overflow-y:auto}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--line-soft)}
+.modal-foot .grow{flex:1}
+
+/* ── toasts ───────────────────────────────────────────────────── */
+#toasts{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:9px;max-width:360px}
+.toast{display:flex;gap:10px;align-items:flex-start;background:#101b30;border:1px solid var(--line);
+  border-radius:11px;padding:11px 14px;font-size:12.5px;box-shadow:0 12px 40px rgba(0,0,0,.45);animation:slidein .22s ease}
+@keyframes slidein{from{transform:translateX(30px);opacity:0}}
+.toast .t-ico{flex-shrink:0;margin-top:1px}
+.toast.ok .t-ico{color:var(--emerald)} .toast.err .t-ico{color:var(--red)}
+.toast.info .t-ico{color:var(--sky)} .toast.warn .t-ico{color:var(--amber)}
+
+/* ── stat cards ───────────────────────────────────────────────── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:rgba(15,23,42,.55);border:1px solid var(--line-soft);border-radius:12px;padding:13px 15px;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:rgba(255,255,255,.05)}
+.stat .lb{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin-bottom:5px}
+.stat .vl{font-size:13.5px;font-weight:600;color:#e2e8f0}
+
+/* ── hero (project detail) ────────────────────────────────────── */
+.hero{background:linear-gradient(160deg,#0d1f3c 0%,#0a1628 45%,#060d1a 100%);border-bottom:1px solid var(--line-soft);position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;right:-60px;top:-60px;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(246,130,31,.08),transparent 70%)}
+.avatar{display:grid;place-items:center;width:54px;height:54px;border-radius:15px;font-weight:800;font-size:18px;color:#fff;flex-shrink:0;
+  background:linear-gradient(135deg,#f6821f,#9a3e00);box-shadow:0 6px 22px rgba(246,130,31,.35)}
+
+/* ── terminal ─────────────────────────────────────────────────── */
+.term{background:#070d1c;border:1px solid var(--line-soft);border-radius:12px;overflow:hidden;font-family:var(--font-mono);font-size:11.5px;line-height:1.65}
+.term-chrome{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line-soft);background:#0a1122}
+.tdots{display:flex;gap:6px}
+.tdots span{width:10px;height:10px;border-radius:50%}
+.tdots .r{background:rgba(239,68,68,.7)}.tdots .y{background:rgba(245,158,11,.7)}.tdots .g{background:rgba(16,185,129,.7)}
+.term-body{padding:12px 16px;max-height:280px;overflow-y:auto;color:#94a3b8}
+.term-body .ok{color:#6ee7b7}.term-body .hi{color:var(--accent-hi)}.term-body .dm{color:#475569}
+.ll-body{padding:14px 18px;flex:1;overflow-y:auto
+;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;max-height:none}
+.ll-entry{border-bottom:1px solid rgba(30,41,59,.5);padding-bottom:10px;margin-bottom:10px}
+.ll-entry:last-child{border-bottom:none;margin-bottom:0}
+
+/* ── grids ────────────────────────────────────────────────────── */
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.tplgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:34px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px}
+@media(max-width:980px){.split{grid-template-columns:1fr}}
+.sticky{position:sticky;top:20px}
+.tile{border:1px solid var(--line-soft);border-radius:12px;padding:16px;cursor:pointer;background:rgba(15,23,42,.55);transition:all .14s;display:flex;flex-direction:column}
+.tile:hover{border-color:var(--line-2)}
+.tile.mini{padding:13px 15px}
+.importcard{display:flex;flex-direction:column;gap:8px;border-radius:12px;padding:16px 18px;cursor:pointer;
+  border:1px solid rgba(246,130,31,.4);background:rgba(246,130,31,.05);transition:all .14s}
+.importcard:hover{border-color:var(--accent)}
+.importcard .ttl{font-size:13.5px;font-weight:600}
+.importcard .sub{font-size:12px;color:#94a3b8}
+
+/* ── detail rows ──────────────────────────────────────────────── */
+.dl{display:flex;justify-content:space-between;gap:16px;padding:8px 0;font-size:13px}
+.dl dt{color:var(--dim);flex-shrink:0}
+.dl dd{margin:0;text-align:right;color:#cbd5e1;min-width:0;overflow-wrap:anywhere}
+.dl dd.mono{font-family:var(--font-mono);font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.divide>*+*{border-top:1px solid var(--line-soft)}
+
+/* ── activity timeline ────────────────────────────────────────── */
+.timeline{margin-left:6px;padding-left:18px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:16px}
+.tl-item{position:relative}
+.tl-item::before{content:"";position:absolute;left:-26px;top:0;width:16px;height:16px;border-radius:50%;
+  border:1px solid var(--line-2);background:#0b1220;display:grid;place-items:center}
+.tl-item .ic{position:absolute;left:-24px;top:1px;width:12px;height:12px;display:grid;place-items:center;font-size:9px}
+.tl-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px}
+.tl-top .lb{font-size:12.5px;font-weight:600}
+.tl-top .who{font-size:11px;color:var(--dim)}
+.tl-top time{font-size:11px;color:var(--dim);margin-left:auto}
+.tl-detail{font-size:11.5px;color:var(--dim);margin-top:2px}
+.c-emerald{color:var(--emerald)}.c-red{color:var(--red)}.c-sky{color:var(--sky)}
+.c-amber{color:var(--amber)}.c-purple{color:var(--purple)}.c-slate{color:var(--muted)}
+
+/* ── login ────────────────────────────────────────────────────── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:360px}
+.login-badge{margin:0 auto 18px;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;color:#0b0b0b;
+  background:linear-gradient(135deg,#f6821f,#b85c10);font-weight:800;font-size:15px}
+.demo-hint{margin-top:16px;border:1px dashed var(--line-2);border-radius:9px;padding:9px 12px;font-size:11.5px;color:var(--dim)}
+
+/* ── misc ─────────────────────────────────────────────────────── */
+.empty{border:1px dashed var(--line-2);border-radius:12px;padding:40px;text-align:center;color:var(--dim);font-size:13.5px}
+.skel{height:14px;border-radius:6px;background:var(--line-soft);animation:pl 1.4s ease-in-out infinite}
+.snippet{background:#060d1c;border:1px solid var(--line-soft);border-radius:10px;padding:12px 14px;font-family:var(--font-mono);font-size:11px;line-height:1.7;color:#94a3b8;overflow-x:auto;white-space:pre}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.dot-pulse{width:9px;height:9px;border-radius:50%;background:var(--amber);animation:pl 1.2s ease-in-out infinite;flex-shrink:0}
+.dot-ok{width:9px;height:9px;border-radius:50%;background:var(--emerald);flex-shrink:0}
+.dot-dim{width:9px;height:9px;border-radius:50%;background:#475569;flex-shrink:0}
+.dot-red{width:9px;height:9px;border-radius:50%;background:var(--red);flex-shrink:0}
+.flex{display:flex}.flex1{flex:1}.g8{gap:8px}.g12{gap:12px}.col{flex-direction:column}
+.ai-c{align-items:center}.ai-s{align-items:flex-start}.jb{justify-content:space-between}
+.mt4{margin-top:4px}.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb24{margin-bottom:24px}
+.trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.muted{color:var(--muted)}.dim{color:var(--dim)}.tiny{font-size:11px}
+.live-bar{position:fixed;left:var(--sbw);right:0;top:0;height:100vh;background:#040a14;z-index:60;display:flex;flex-direction:column}
+.live-top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 24px;border-bottom:1px solid var(--line-soft);background:#080f1e;flex-wrap:wrap}
+.live-status{position:fixed;left:var(--sbw);right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:10px 24px;border-top:1px solid var(--line-soft);background:#080f1e;font-family:var(--font-mono);font-size:11px;color:#475569;z-index:61;flex-wrap:wrap}
+.br{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-soft);background:#0b1220;border-radius:8px;padding:4px 11px;font-family:var(--font-mono);font-size:11px;color:var(--accent-hi)}
+a:hover{color:var(--accent-hi)}
+.menu{position:absolute;right:0;top:38px;z-index:55;min-width:180px;background:#0f172a;border:1px solid var(--line-2);border-radius:11px;padding:5px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.menu button{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:8px 11px;border:none;background:none;border-radius:7px;color:#e2e8f0;font-size:13px}
+.menu button:hover{background:#1e293b}
+.menu button.red{color:#fda4af}.menu button.red:hover{background:rgba(127,29,29,.4)}
+.filelist{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font-family:var(--font-mono);font-size:11px;color:var(--dim)}
+@media(max-width:860px){body.signed #view,body.signed .live-bar,body.signed .live-status{margin-left:0;left:0}
+  #sidebar{transform:translateX(-100%);width:var(--sbw)!important}
+  body.drawer-open #sidebar{transform:translateX(0);box-shadow:0 0 60px rgba(0,0,0,.6)}
+  .tb{display:flex}
+  body.signed #view{margin-top:52px;padding-top:0}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="tb">
+    <button class="icon-btn" id="burger"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <span class="flex ai-c g8" style="font-weight:600;font-size:13px">
+      <span class="sb-logo">LP</span> Cloudflare Launchpad
+    </span>
+  </div>
+  <aside id="sidebar"></aside>
+  <div id="view"></div>
+  <div id="toasts"></div>
+  <div id="modal-root"></div>
+</div>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════
+   0 · Helpers
+   ════════════════════════════════════════════════════════════════ */
+var $ = function(id){return document.getElementById(id)};
+var q = function(sel){var r=document.querySelector(sel);return r};
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function icon(name,cls){
+  var p={
+  zap:'<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
+  tpl:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/>',
+  logoff:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
+  gh:'<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>',
+  ext:'<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/>',
+  term:'<path d="M4 17l6-5-6-5"/><path d="M12 19h8"/>',
+  refr:'<path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/>',
+  trash:'<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  key:'<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+  box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/>',
+  rocket:'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  act:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  back:'<path d="M19 12H5M12 19l-7-7 7-7"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  branch:'<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  cloud:'<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A7 7 0 0 0 4.3 9.5 5 5 0 0 0 6 19h11.5z"/>',
+  awsico:'<path d="M7 8 3 20h3l1-4h3l1 4h3L10 8h-3Z"/><path d="M14 13h4l1 2h2l-4-8h-3l-4 8h2l2-2Zm1-6 1.5 6H14l1-6Z"/>',
+  eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+  left:'<path d="M15 6l-6 6 6 6"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+  warn:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  play:'<path d="M5 12h14M12 5l7 7-7 7"/>',
+  stop:'<rect x="6" y="6" width="12" height="12" rx="1"/>'
+  };
+  return '<svg class="icon '+(cls||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p[name]+'</svg>';
+}
+function toast(msg,type){
+  var c={ok:'ok',err:'err',info:'info',warn:'warn'};
+  var ic={ok:'check',err:'warn',info:'info',warn:'info'}[type]||'check';
+  var el=document.createElement('div');
+  el.className='toast '+(type||'ok');
+  el.innerHTML='<span class="t-ico">'+icon(ic)+'</span><div>'+esc(msg)+'</div>';
+  $('toasts').appendChild(el);
+  setTimeout(function(){el.style.opacity='0';el.style.transform='translateX(30px)';el.style.transition='all .3s';
+    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el)},300)},3600);
+}
+function tname(v){return v==null?'—':v}
+function rel(t){if(!t)return '—';var m={h:0,d:0};return t}
+function shortDate(iso){var m={};try{return new Date(iso).toLocaleDateString()}catch(e){return iso}}
+function shortSha(s){return s?s.slice(0,7):'—'}
+function fmtDur(a,b){return '1m 12s'}
+
+/* ════════════════════════════════════════════════════════════════
+   1 · Mock data
+   ════════════════════════════════════════════════════════════════ */
+var ORG='newpage';
+
+var CATS=[
+ {id:'javascript',label:'JavaScript',desc:'Plain JavaScript Workers and apps.'},
+ {id:'typescript',label:'TypeScript',desc:'Typed Workers and full-stack starters.'},
+ {id:'python',label:'Python',desc:'Python Workers on the edge.'},
+ {id:'framework',label:'Frameworks',desc:'Astro, Hono, Next.js and Express apps.'},
+ {id:'static',label:'Static',desc:'Static sites served by Cloudflare Pages.'}
+];
+
+var TPLS=[
+ {id:'worker-js',name:'Cloudflare Worker (JavaScript)',cat:'javascript',type:'worker',provider:'cloudflare',runtime:'JavaScript',build:'',setup:'',cmd:'wrangler deploy',c3:false,files:['wrangler.toml','src/index.js','package.json','README.md','.gitignore']},
+ {id:'c3-worker-js',name:'Worker (JavaScript) — official',cat:'javascript',type:'worker',provider:'cloudflare',runtime:'JavaScript',build:'',setup:'npm install',cmd:'wrangler deploy',c3:true,c3args:'--framework=javascript',files:['wrangler.jsonc','src/index.js','package.json','tsconfig.json','README.md']},
+ {id:'worker-ts',name:'Cloudflare Worker (TypeScript)',cat:'typescript',type:'worker',provider:'cloudflare',runtime:'TypeScript',build:'',setup:'',cmd:'wrangler deploy',c3:false,files:['wrangler.toml','src/index.ts','tsconfig.json','package.json','README.md']},
+ {id:'c3-worker-ts',name:'Worker (TypeScript) — official',cat:'typescript',type:'worker',provider:'cloudflare',runtime:'TypeScript',build:'',setup:'npm install',cmd:'wrangler deploy',c3:true,c3args:'--framework=typescript',files:['wrangler.jsonc','src/index.ts','package.json','tsconfig.json','README.md']},
+ {id:'aws-lambda-ts',name:'AWS Lambda (TypeScript)',cat:'typescript',type:'lambda',provider:'aws',runtime:'Node.js',build:'npm run build',setup:'npm install',cmd:'sam deploy',c3:false,files:['template.yaml','samconfig.toml','src/handler.ts','tsconfig.json','.github/workflows/deploy.yml']},
+ {id:'c3-worker-python',name:'Worker (Python) — official',cat:'python',type:'worker',provider:'cloudflare',runtime:'Python',build:'',setup:'npm install',cmd:'uv run pywrangler deploy',c3:true,c3args:'--framework=python',files:['wrangler.jsonc','src/entry.py','pyproject.toml','package.json','README.md']},
+ {id:'aws-lambda-py',name:'AWS Lambda (Python)',cat:'python',type:'lambda',provider:'aws',runtime:'Python',build:'',setup:'',cmd:'sam deploy',c3:false,files:['template.yaml','samconfig.toml','src/app.py','requirements.txt','.github/workflows/deploy.yml']},
+ {id:'c3-astro',name:'Astro — official',cat:'framework',type:'worker',provider:'cloudflare',runtime:'Astro',build:'npm run build',setup:'npm install',cmd:'wrangler deploy',c3:true,c3args:'--framework=astro',files:['wrangler.toml','astro.config.mjs','src/pages/index.astro','package.json','README.md']},
+ {id:'c3-hono',name:'Hono — official',cat:'framework',type:'worker',provider:'cloudflare',runtime:'Hono',build:'',setup:'npm install',cmd:'wrangler deploy',c3:true,c3args:'--framework=hono',files:['wrangler.jsonc','src/index.ts','package.json','tsconfig.json','README.md']},
+ {id:'c3-next',name:'Next.js — official',cat:'framework',type:'worker',provider:'cloudflare',runtime:'Next.js',build:'npm run build',setup:'npm install',cmd:'wrangler deploy',c3:true,c3args:'--framework=next',files:['wrangler.jsonc','next.config.mjs','src/app/page.tsx','package.json','README.md']},
+ {id:'node-express',name:'Node.js Express (Worker)',cat:'framework',type:'worker',provider:'cloudflare',runtime:'Express',build:'',setup:'',cmd:'wrangler deploy',c3:false,files:['wrangler.toml','src/index.js','package.json','README.md']},
+ {id:'aws-node-express',name:'Node.js Express (AWS Lambda)',cat:'framework',type:'lambda',provider:'aws',runtime:'Express',build:'npm run build',setup:'npm install',cmd:'sam deploy',c3:false,files:['template.yaml','samconfig.toml','src/app.ts','.github/workflows/deploy.yml','README.md']},
+ {id:'pages-static',name:'Cloudflare Pages (Static site)',cat:'static',type:'pages',provider:'cloudflare',runtime:'HTML/CSS',build:'',setup:'',cmd:'pages deploy public --project-name=__PROJECT_NAME__',c3:false,files:['public/index.html','public/style.css','.github/workflows/deploy.yml','README.md']},
+ {id:'aws-amplify-static',name:'AWS Amplify (Static)',cat:'static',type:'amplify',provider:'aws',runtime:'Static',build:'',setup:'',cmd:'amplify',c3:false,coming:true,files:['public/index.html','amplify.yml','README.md']},
+ {id:'aws-amplify-next',name:'Next.js on AWS Amplify',cat:'framework',type:'amplify',provider:'aws',runtime:'Next.js',build:'npm run build',setup:'npm install',cmd:'amplify',c3:false,coming:true,files:['amplify/backend/backend-config.ts','src/app/page.tsx','amplify.yml','README.md']}
+];
+function catLabel(id){var c=CATS.find(function(x){return x.id===id});return c?c.label:id}
+function tplById(id){return TPLS.find(function(t){return t.id===id})}
+function platform(t){if(t.provider==='aws')return t.type==='amplify'?'AWS Amplify':'AWS Lambda';
+  return t.type==='pages'?'Cloudflare Pages':'Cloudflare Workers'}
+function chipTags(t){var h='';
+  if(t.c3)h+='<span class="chip c3">create-cloudflare</span>';
+  if(t.coming)h+='<span class="chip soon">coming soon</span>';
+  h+='<span class="chip">'+catLabel(t.cat)+'</span><span class="chip">'+t.runtime+'</span>';
+  if(t.build)h+='<span class="chip sky">build</span>';
+  return h}
+
+var AUDIT=[];
+function logAudit(actor,action,project,detail,outcome){AUDIT.unshift({at:new Date() .toISOString(),actor:actor,action:action,project:project,detail:detail,outcome:outcome||'ok'})}
+
+var PROJECTS;
+function freshProject(){
+  return {
+    id:'p-x',name:'api-gateway',tpl:TPLS[3],templateName:'Worker (TypeScript) — official',
+    type:'worker',provider:'cloudflare',owner:ORG,repo:'api-gateway',createdAt:'2026-08-04',
+    status:'success',totalRuns:18,latestRun:42,env:[],binds:[],members:[],invites:[],access:'public',accessKey:null
+  };
+}
+PROJECTS=[
+ (function(){var p=freshProject();p.id='p1';p.tpl=tplById('c3-worker-ts');p.templateName=p.tpl.name;p.status='success';p.latestRun=42;
+  p.env=[{key:'API_KEY',kind:'secret'},{key:'LOG_LEVEL',kind:'text'},{key:'REGION',kind:'text'}];
+  p.binds=[{type:'kv',name:'CACHE',resource:'api-gateway-cache'},{type:'d1',name:'DB',resource:'api-gateway-db'},{type:'ai_search',name:'SEARCH',resource:'api-gateway-search'}];
+  p.members=[{username:'admin',role:'owner',gh:'newpage',ghState:'active'},{username:'jane-doe',role:'member',gh:'jane-doe',ghState:'active'}];
+  p.invites=[{role:'member',by:'admin',state:'pending',expires:'Sep 25, 2026'}];
+  p.access='org';p.accessKey='api-gateway-9f2k7j3m';p.previews=[{branch:'main',on:true},
+   {branch:'dev',on:true,name:'api-gateway-dev'},{branch:'staging',on:true,name:'api-gateway-staging'}];
+  p.activity=makeActivity(p.name);
+  p.url='https://api-gateway.newpage.workers.dev';return p}()),
+ (function(){var p=freshProject();p.id='p2';p.tpl=tplById('pages-static');p.templateName=p.tpl.name;p.type='pages';p.name='landing-2026';p.repo='landing-2026';p.status='success';p.latestRun=31;p.url='https://landing-2026.pages.dev';p.activity=makeActivity(p.name);return p}()),
+ (function(){var p=freshProject();p.id='p3';p.tpl=tplById('node-express');p.templateName=p.tpl.name;p.name='webhooks-pipeline';p.repo='webhooks-pipeline';p.status='running';p.latestRun=57;p.url='https://webhooks-pipeline.newpage.workers.dev';p.activity=makeActivity(p.name);return p}()),
+ (function(){var p=freshProject();p.id='p4';p.tpl=tplById('aws-lambda-ts');p.templateName=p.tpl.name;p.name='analytics-ingest';p.repo='analytics-ingest';p.type='lambda';p.provider='aws';p.status='failure';p.latestRun=12;p.url='https://9x3k2.execute-api.us-east-1.amazonaws.com/prod';p.activity=makeActivity(p.name);return p}()),
+ (function(){var p=freshProject();p.id='p5';p.tpl=tplById('c3-astro');p.templateName=p.tpl.name;p.name='blog-astro';p.repo='blog-astro';p.status='success';p.latestRun=8;p.url='https://blog-astro.newpage.workers.dev';p.activity=makeActivity(p.name);return p}()),
+ (function(){var p=freshProject();p.id='p6';p.tpl=tplById('c3-next');p.templateName=p.tpl.name;p.name='docs-portal';p.repo='docs-portal';p.status='no-runs';p.latestRun=0;p.url='https://docs-portal.newpage.workers.dev';p.activity=makeActivity(p.name);return p}()),
+ (function(){var p=freshProject();p.id='p7';p.tpl=tplById('worker-js');p.templateName=p.tpl.name;p.name='status-tile';p.repo='status-tile';p.status='queued';p.latestRun=64;p.url='https://status-tile.newpage.workers.dev';p.activity=makeActivity(p.name);return p}())
+];
+function makeActivity(proj){
+  return [
+   {at:'2m ago',actor:'admin',action:'redeploy',detail:'Triggered re-deploy (run #43)',project:proj},
+   {at:'1h ago',actor:'jane-doe',action:'env_set',detail:'Added MIGRATION_ENABLED',project:proj},
+   {at:'5h ago',actor:'admin',action:'binding_add',detail:'Added KV binding CACHE',project:proj},
+   {at:'1d ago',actor:'jane-doe',action:'preview_enable',detail:'Enabled per-branch previews',project:proj},
+   {at:'2d ago',actor:'admin',action:'launch',detail:'Project launched (c3-worker-ts, Cloudflare Workers)',project:proj}
+  ]}
+/* fill default activity for seeded projects */
+(function(){PROJECTS.forEach(function(p){if(!p.activity)p.activity=makeActivity(p.name)})})();
+PROJECTS=PROJECTS.filter(Boolean);
+
+function runsOf(p){
+  var mk=function(runId,status,conclusion,sha,started,dur){
+    return {runId:runId,status:status,conclusion:conclusion,headSha:sha,created:started,updated:started,dur:dur,
+      steps:[{name:'Checkout code',s:'completed',c:'success'},{name:'Install dependencies',s:'completed',c:'success'},{name:'Build',s:'completed',c:'success'},{name:'Deploy to '+(p.provider==='aws'?'AWS':'Cloudflare'),s:status,c:conclusion}],
+      text:'Run #'+runId+'\n'+sha+' push to main triggered this workflow.\n\n✔ Checkout code\n✔ Install dependencies ('+(p.tpl.runtime)+')\n✔ Build\n'+(conclusion==='success'?'✔ Deploy to '+platform(p.tpl):'✖ Deploy step failed\n\n▶ See action logs for details')};
+  };
+  if(p.status==='no-runs')return [];
+  if(p.status==='running')return [mk(43,'in_progress',null,'f3e9a21','4m ago','2m 40s'),mk(42,'completed','success','a1b2c3d','3h ago','1m 12s'),mk(41,'completed','success','991fd0e','1d ago','1m 04s')];
+  if(p.status==='failure')return [mk(12,'completed','failure','c7d811f','6h ago','2m 31s'),mk(11,'completed','success','4432ff0','2d ago','1m 09s'),mk(10,'completed','success','0aabb12','3d ago','58s')];
+  if(p.status==='queued')return [mk(64,'queued',null,'11ee229','just now','—'),mk(63,'completed','success','7fce004','20m ago','1m 18s')];
+  return [mk(p.latestRun,'completed','success', p.id==='p1'?'a1b2c3d':'9c1e4f0','6h ago', fmtDur()) ,mk(p.latestRun-1,'completed','success','6dd0c21','2d ago','1m 01s'),mk(p.latestRun-2,'completed','success','f0a9b12','3d ago','57s')];
+}
+PROJECTS.forEach(function(p,i){p.runs=runsOf(p);if(p.runs.length&&p.status!=='no-runs')p.latestRun=p.runs[0].runId});
+var STATUS_META={
+ 'queued':{label:'Queued',cls:'amber'},'running':{label:'Deploying',cls:'sky',pulse:true},
+ 'success':{label:'Deployed',cls:'emerald'},'failure':{label:'Failed',cls:'red'},
+ 'cancelled':{label:'Cancelled',cls:'slate'},'no-runs':{label:'No deploys yet',cls:'slate'},'unknown':{label:'Unknown',cls:'slate'}};
+function statusPill(s,q){var m=STATUS_META[s||'unknown'];
+  return '<span class="pill '+m.cls+(m.pulse?' pulse':'')+'"><span class="dot"></span>'+m.label+'</span>'}
+
+var ACTION_META={
+ login:{lb:'Signed in',ic:'●',c:'c-slate'},logout:{lb:'Signed out',ic:'●',c:'c-slate'},
+ launch:{lb:'Project launched',ic:'▲',c:'c-emerald'},launch_failed:{lb:'Launch failed',ic:'▲',c:'c-red'},
+ redeploy:{lb:'Re-deploy triggered',ic:'↻',c:'c-sky'},delete:{lb:'Project deleted',ic:'✕',c:'c-red'},
+ env_set:{lb:'Env variable set',ic:'＋',c:'c-amber'},env_delete:{lb:'Env variable removed',ic:'−',c:'c-amber'},
+ binding_add:{lb:'Binding added',ic:'＋',c:'c-purple'},binding_remove:{lb:'Binding removed',ic:'−',c:'c-purple'},
+ preview_enable:{lb:'Previews enabled',ic:'◈',c:'c-emerald'},preview_disable:{lb:'Previews disabled',ic:'◇',c:'c-emerald'},
+ provision_enable:{lb:'Provisioning enabled',ic:'◈',c:'c-sky'},provision_disable:{lb:'Provisioning disabled',ic:'◇',c:'c-sky'},
+ invite_create:{lb:'Invite created',ic:'＋',c:'c-sky'},invite_revoke:{lb:'Invite revoked',ic:'−',c:'c-amber'},
+ invite_accept:{lb:'Invite accepted',ic:'✓',c:'c-emerald'},member_add:{lb:'Member added',ic:'＋',c:'c-emerald'},
+ member_remove:{lb:'Member removed',ic:'−',c:'c-red'},member_role_change:{lb:'Member role changed',ic:'◈',c:'c-sky'},
+ site_access_enable:{lb:'Site access enabled',ic:'🔒',c:'c-emerald'},site_access_disable:{lb:'Site access disabled',ic:'🔓',c:'c-slate'},
+ site_access_rotate:{lb:'Site access key rotated',ic:'⟳',c:'c-amber'},config_applied:{lb:'Launch config applied',ic:'◈',c:'c-emerald'},
+ collaborator_add:{lb:'GitHub collaborator added',ic:'◈',c:'c-purple'},collaborator_remove:{lb:'GitHub collaborator removed',ic:'◇',c:'c-purple'}};
+function activityHTML(list){
+  if(!list||!list.length)return '<p class="dim" style="font-size:12.5px;padding:4px 0">No activity recorded yet.</p>';
+  var h='<div class="timeline">';
+  list.forEach(function(a){
+    var m=ACTION_META[a.action]||{lb:a.action,ic:'●',c:'c-slate'};
+    h+='<div class="tl-item"><span class="ic '+m.c+'">'+m.ic+'</span>'+
+     '<div class="tl-top"><span class="lb">'+m.lb+'</span><span class="who">'+esc(a.actor)+'</span><time>'+esc(a.at)+'</time></div>'+
+     (a.detail?'<div class="tl-detail">'+esc(a.detail)+'</div>':'')+'</div>'}) ;
+  return h+'</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   2 · App state + router
+   ════════════════════════════════════════════════════════════════ */
+var VIEW={name:'login',params:{}};
+var session=null;
+var W={step:1,category:null,tpl:null,details:null,name:'',priv:true,pat:'',cfTok:'',acct:'',awsKey:'',awsSec:'',awsReg:'',
+ envs:[],binds:[],preview:true,provision:true,importMode:false,importUrl:'',importPat:'',importAnalysis:null,importProj:'',
+ importEnv:{},error:null,submitting:false};
+var P={tab:'overview'};
+var live={timer:null,entries:[],streaming:false,connected:false,branch:'main',autoScroll:true};
+var CURRENT_PROJ=null,CURRENT_RUN=null;
+var modal=null;
+
+function go(name,params){VIEW={name:name,params:params||{}};render()}
+function render(){
+  $('sidebar').innerHTML=sidebarHTML();
+  $('view').innerHTML=viewHTML();
+  document.body.classList.toggle('signed',!!session);
+  window.scrollTo(0,0);
+  if(VIEW.name==='live'){document.body.classList.add('noscroll')}else{document.body.classList.remove('noscroll')}
+  wire();
+}
+function wire(){
+  var w=WIRES[VIEW.name];if(w)w();
+  var b=$('burger');if(b)b.onclick=function(){document.body.classList.toggle('drawer-open')};
+}
+function openModal(html,closeAuto){
+  modal=html;$('modal-root').innerHTML=
+   '<div class="modal-backdrop" id="mb"><div class="modal">'+html+'</div></div>';
+  $('mb').addEventListener('mousedown',function(e){if(e.target.id==='mb')closeModal()});
+  document.addEventListener('keydown',escKey);
+}
+function closeModal(){$('modal-root').innerHTML='';modal=null;document.removeEventListener('keydown',escKey)}
+function escKey(e){if(e.key==='Escape'){if(modal!==null)closeModal()}}
+
+/* ════════════════════════════════════════════════════════════════
+   3 · Sidebar
+   ════════════════════════════════════════════════════════════════ */
+function sidebarHTML(){
+  if(!session)return '';
+  var n=[['home','Launch',icon('zap')],['projects','Projects',icon('grid')],['templates','Templates',icon('tpl')]];
+  var nav='';
+  n.forEach(function(it){
+    var active=VIEW.name===it[0];
+    nav+='<a class="navlink '+(it[0]==='home'?'play':'')+(active?' active':'')+'" data-nav="'+it[0]+'">'+it[2]+'<span class="sb-label">'+it[1]+'</span></a>'});
+  var sActive=VIEW.name==='settings';
+  return '<div class="sb-head">'+
+   '<a class="sb-brand" data-nav="home"><span class="sb-logo">LP</span><span class="sb-brand-txt sb-label">Cloudflare Launchpad</span></a>'+
+   '<button class="icon-btn collapse-handle" id="sbToggle" title="Toggle sidebar" style="position:static;transform:none;margin-left:auto;height:26px;width:26px">'+icon('left','collapse-ico')+'</button></div>'+
+   '<nav class="sb-nav">'+nav+'</nav>'+
+   '<div class="sb-foot">'+
+   '<a class="navlink '+(sActive?'active':'')+'" data-nav="settings">'+icon('gear')+'<span class="sb-label">Settings</span></a>'+
+   '<button class="navlink sb-label" id="logout" style="width:100%;text-align:left;border:none;background:none">'+icon('logoff')+'<span class="sb-label">Log out</span></button>'+
+   '</div>';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   4 · Views
+   ════════════════════════════════════════════════════════════════ */
+function viewHTML(){
+  switch(VIEW.name){
+    case 'login':return vLogin();
+    case 'home':return W.importMode?vImport():vHome();
+    case 'templates':return vTemplates();
+    case 'projects':return vProjects();
+    case 'project':return vProject();
+    case 'live':return vLive();
+    case 'preview':return vPreview();
+    case 'invite':return vInvite();
+    case 'settings':return vSettings();
+  }
+  return '';
+}
+
+/* ── LOGIN ─────────────────────────────────────────────────────── */
+function vLogin(){
+  return '<div class="login-wrap"><div class="login-card">'+
+   '<div class="login-badge">LP</div>'+
+   '<div style="text-align:center;margin-bottom:20px"><div style="font-size:18px;font-weight:650">Cloudflare Launchpad</div>'+
+   '<div class="muted" style="font-size:13px;margin-top:3px">Sign in to launch apps. Anything goes in demo mode — type any password.</div></div>'+
+   '<div class="card"><div class="card-body">'+
+   '<div id="loginErr" style="display:none"></div>'+
+   '<div class="field"><label for="lu">Username</label><input class="input" id="lu" placeholder="Your username (from an invite)" value="admin" autocomplete="username"></div>'+
+   '<div class="field"><label for="lp">Password</label><input class="input" id="lp" type="password" placeholder="Launchpad password" autocomplete="current-password"></div>'+
+   '<button class="btn primary wood" id="loginBtn" style="width:100%;height:38px;font-size:13.5px">Sign in</button>'+
+   '</div></div>'+
+   '<div class="demo-hint">Demo: preset username <b class="mono">admin</b>. Any password signs you in — create a repo, launch an app and explore the whole flow.</div>'+
+   '</div></div>';
+}
+function wireLogin(){
+  function submit(){
+    var u=$('lu').value.trim(),p=$('lp').value;
+    if(!u||!p){var e=$('loginErr');$('loginErr').innerHTML='<div class="errbox mb12">'+icon('warn')+'Enter a username and password.</div>';e.style.display='' ;return}
+    $('loginBtn').disabled=true;$('loginBtn').innerHTML='<span class="spin"></span> Signing in…';
+    setTimeout(function(){
+      session={username:u,globalAdmin:u==='admin'};
+      logAudit(u,'login',null,'Signed in from prototype demo','ok');
+      toast('Signed in as '+u,'ok');
+      if(W.step===1&&W.category){go('projects')}
+      else if(W.importMode)go('projects');
+      else go('projects');
+    },900);
+  }
+  $('loginBtn').onclick=submit;
+  $('lp').addEventListener('keydown',function(e){if(e.key==='Enter')submit()});
+  $('lu').addEventListener('keydown',function(e){if(e.key==='Enter')submit()});
+}
+
+/* ── HOME (launch wizard) ──────────────────────────────────────── */
+function vHome(){
+  if(W.step===1)return homeStep1();
+  if(W.step===2)return homeStep2();
+  return homeStep3();
+}
+function homeStep1(){
+  var cats=CATS.map(function(c,i){
+    return '<div class="tile" data-cat="'+c.id+'" style="cursor:pointer"><span style="font-weight:600;font-size:13.5px">'+c.label+'</span>'+
+     '<span class="muted tiny mt4" style="flex:1">'+c.desc+'</span>'+
+     '<span class="accent tiny mt12" style="font-weight:600">Choose →</span></div>'}).join('');
+  return '<div class="page">'+
+   '<h1 style="font-size:24px;font-weight:650;margin:0 0 4px">Launch a new app</h1>'+
+   '<p class="muted" style="font-size:13.5px;margin:0 0 22px">Choose a language and framework to get started.</p>'+
+   '<div class="importcard mb24" id="openImport">'+
+   '<div class="flex ai-c jb"><span class="ttl">Deploy an existing project</span><span class="chip amber">New</span></div>'+
+   '<div class="sub">Paste a GitHub URL from an app you (or your AI) already built. Launchpad analyzes it and deploys it to Cloudflare — with nothing to configure.</div>'+
+   '<span class="accent tiny" style="font-weight:600">Try it with an example →</span>'+
+   '</div>'+
+   '<div style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);font-weight:600;margin-bottom:10px">Choose a language</div>'+
+   '<div class="catgrid">'+cats+'</div></div>';
+}
+function homeStep2(){
+  var tpls=TPLS.filter(function(t){return t.cat===W.category});
+  var grid=tpls.map(function(t){
+    var isAmp=t.coming;
+    return '<div class="tile" data-open-tpl="'+t.id+'" style="'+(isAmp?'opacity:.75':'cursor:pointer')+'">'+
+     '<div class="flex ai-s jb g8"><span style="font-weight:600;font-size:13.5px">'+t.name+'</span>'+
+     '<span class="chip '+(t.provider==='aws'?'aws':'')+'">'+platform(t)+'</span></div>'+
+     '<span class="muted tiny mt8" style="flex:1">'+t.desc+'</span>'+
+     '<div class="chiprow mt12">'+chipTags(t)+'</div>'+
+     (isAmp
+      ?'<button class="btn ghost sm mt16" disabled style="width:100%;justify-content:center">Coming Soon</button>'
+      :'<button class="btn ghost sm mt16" data-details="'+t.id+'" style="width:100%;justify-content:center">View details</button>')+
+     '</div>'}).join('');
+  return '<div class="page">'+
+   '<div class="flex ai-c jb mb16"><div><div style="font-size:20px;font-weight:650">Choose a template</div>'+
+   '<div class="muted tiny mt4">'+catLabel(W.category)+' · '+tpls.length+' templates</div></div>'+
+   '<button class="btn ghost sm" id="backStep1">'+icon('back')+' Change language</button></div>'+
+   '<div class="tplgrid">'+grid+'</div>'+
+   (W.details?tplDetailsModal():'')+'</div>';
+}
+function tplDetailsModal(){
+  var t=W.details;
+  if(!t)return '';
+  var dl=function(l,v,m){return '<div class="dl"><dt>'+l+'</dt><dd'+(m?' class="mono"':'')+'>'+v+'</dd></div>'};
+  return '<div class="modal-backdrop" style="position:fixed" id="tplModal"><div class="modal" style="width:640px;max-width:96vw">'+
+   '<div class="modal-head"><div><div class="flex ai-c g8"><h2>'+t.name+'</h2><span class="chip">'+platform(t)+'</span></div>'+
+   '<div class="sub mt4">'+t.desc+'</div></div>'+
+   '<button class="icon-btn" id="closeTpl">'+icon('x')+'</button></div>'+
+   '<div class="modal-body">'+
+   '<div class="chiprow mb12">'+chipTags(t)+'</div>'+
+   '<div class="card mb12"><div class="card-head"><span class="ttl">Deployment</span></div>'+
+   '<div class="card-body" style="padding:10px 16px">'+
+   dl('Platform',platform(t))+dl('Source',t.c3?'create-cloudflare (live)':'Built-in')+dl('Runtime','<span class="mono" style="color:#e2e8f0">'+t.runtime+'</span>')+
+   dl('Stack',t.id)+dl('Build',('<span class="mono">'+(t.build||'—'))+'</span>')+
+   dl('Setup','<span class="mono">'+(t.setup||'—')+'</span>')+dl('Deploy command','<span class="mono">'+t.cmd+'</span>')+
+   dl('Files',t.files.length)+'</div></div>'+
+   (t.c3?'<div class="mb12"><div class="tiny" style="font-weight:600;color:#cbd5e1;margin-bottom:6px">create-cloudflare command</div>'+
+    '<div class="snippet">npm create cloudflare@latest -- '+t.c3args+'</div></div>':'')+
+   '<div><div class="tiny" style="font-weight:600;color:#cbd5e1;margin-bottom:6px">Files in template ('+t.files.length+')</div>'+
+   '<div class="filelist">'+t.files.map(function(f){return '<div class="trunc">'+f+'</div>'}).join('')+'</div></div>'+
+   '</div>'+
+   '<div class="modal-foot"><button class="btn ghost" id="closeTpl2">Close</button>'+
+   '<button class="btn primary" id="useTpl" style="flex:1">Use this template →</button></div>'+
+   '</div></div>';
+}
+function homeStep3(){
+  var t=W.tpl,isAmp=t.type==='amplify',isAws=t.provider==='aws',isCF=!isAws;
+  var dl=function(l,v,m){return '<div class="dl"><dt>'+l+'</dt><dd'+(m?' class="mono"':'')+'>'+v+'</dd></div>'};
+  var bRow='';
+  if(W.binds.length)bRow=W.binds.map(function(b,i){
+    return '<div class="flex ai-c g8 mb8"><select class="input mono" data-bt="'+i+'" style="width:96px;padding:6px 26px 6px 8px;font-size:12px">'+
+     ['kv','d1','r2','ai_search'].map(function(o){return '<option'+(o===b.type?' selected':'')+'>'+o+'</option>'}).join('')+'</select>'+
+     '<input class="input mono" data-bn="'+i+'" value="'+esc(b.name)+'" placeholder="BINDING_NAME" style="flex:1;font-size:12px">'+
+     '<input class="input mono" data-br="'+i+'" value="'+esc(b.resource)+'" placeholder="resource-name" style="flex:1;font-size:12px">'+
+     '<button class="icon-btn danger" data-bdel="'+i+'">'+icon('x')+'</button></div>'}).join('')+'';
+  var eRow='';
+  if(W.envs.length)eRow=W.envs.map(function(v,i){
+    return '<div class="flex ai-c g8 mb8"><select class="input mono" data-ek="'+i+'" style="width:92px;padding:6px 26px 6px 8px;font-size:12px">'+
+     '<option value="secret"'+(v.kind==='secret'?' selected':'')+'>secret</option><option value="text"'+(v.kind==='text'?' selected':'')+'>text</option></select>'+
+     '<input class="input mono" data-en="'+i+'" value="'+esc(v.key)+'" placeholder="MY_ENV" style="flex:1;font-size:12px">'+
+     '<input class="input mono" data-ev="'+i+'" type="'+(v.kind==='secret'?'password':'text')+'" value="'+esc(v.value)+'" placeholder="value" style="flex:1;font-size:12px">'+
+     '<button class="icon-btn danger" data-edel="'+i+'">'+icon('x')+'</button></div>'}).join('')+'';
+  return '<div class="page wide"><div class="grid2">'+
+   '<div>'+
+   '<div class="flex ai-c jb mb16"><div><div style="font-size:20px;font-weight:650">Deployment options</div>'+
+   '<div class="muted tiny mt4">Options tailored to <span style="color:#cbd5e1">'+t.name+'</span></div></div>'+
+   '<button class="btn ghost sm" id="backStep2">'+icon('back')+' Change template</button></div>'+
+   (ORG?'<div class="flex ai-c g8 mb16" style="border:1px solid var(--line);background:rgba(15,23,42,.5);border-radius:9px;padding:9px 12px;font-size:12.5px;color:#cbd5e1">'+
+    icon('gh')+'Target: <b>'+ORG+'</b> — the repo and its deploy secrets will be created under this GitHub organization.</div>':'')+
+   '<div class="field"><label for="wName">Project name</label><input class="input" id="wName" value="'+esc(W.name)+'" placeholder="my-api" autocomplete="off">'+
+   '<span class="help">Lowercase letters, numbers, hyphens. Used as the repo name and Cloudflare project name.</span></div>'+
+   '<div class="field"><label>Visibility</label><div class="optrow">'+
+   '<button type="button" class="opt'+(W.priv?' on':'')+'" id="optPriv">Private</button>'+
+   '<button type="button" class="opt'+(!W.priv?' on':'')+'" id="optPub">Public</button></div></div>'+
+   '<div class="card mb16"><div class="card-body" style="padding:13px 16px">'+
+   '<div class="tiny" style="font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:4px">Deployment profile</div>'+
+   dl('Platform',platform(t))+dl('Source',t.c3?'create-cloudflare (live)':'Built-in')+dl('Runtime',t.runtime)+
+   dl('Setup','<span class="mono">'+(t.setup||'—')+'</span>')+dl('Deploy command','<span class="mono">'+t.cmd+'</span>')+
+   dl('Files',t.files.length)+dl('Requires route','<span style=color:var(--amber)>'+(t.requiresRoute?'Yes':'No')+'</span>')+
+   '</div></div>'+
+   '<div class="field"><label for="wPat">GitHub Personal Access Token</label><input class="input mono" id="wPat" type="password" value="'+esc(W.pat)+'" placeholder="Set via .env (optional here)">'+
+   '<span class="help">A token from .env is available; this field is optional in the demo.</span></div>'+
+   (isAws
+    ?(isAmp
+      ?'<div class="amberbox">'+icon('info')+'<div><b>AWS Amplify Gen 2</b> requires a pre-connected Amplify Console app.<br>This template will be available once full automation is implemented.</div></div>'
+      :'<div class="field"><label for="wAK">AWS Access Key ID</label><input class="input mono" id="wAK" value="'+esc(W.awsKey)+'" placeholder="AKIA•••••••• (enabled via .env)" autocomplete="off"></div>'+
+       '<div class="field"><label for="wSK">AWS Secret Access Key</label><input class="input mono" id="wSK" type="password" value="'+esc(W.awsSec)+'" placeholder="Set via .env (optional here)" autocomplete="off"><span class="help">Stored as GitHub repo secrets for the deploy workflow.</span></div>'+
+       '<div class="field"><label for="wReg">AWS Region</label><input class="input mono" id="wReg" value="'+esc(W.awsReg)+'" placeholder="us-east-1 (default)" autocomplete="off"></div>')
+    :'<div class="field" style="margin-top:0"><label for="wTok">Cloudflare API token</label><input class="input mono" id="wTok" type="password" value="'+esc(W.cfTok)+'" placeholder="Set via .env (optional here)" autocomplete="off"><span class="help">Stored as a GitHub repo secret for the deploy workflow.</span></div>'+
+     '<div class="field"><label for="wAcct">Cloudflare account ID</label><input class="input mono" id="wAcct" value="'+esc(W.acct)+'" placeholder="123abc… (via .env)" autocomplete="off"></div>')+
+   (isCF?'<div class="card mb16"><div class="card-body" style="padding:14px 16px">'+
+    '<div class="flex ai-c jb mb12"><span style="font-size:12px;font-weight:600;color:#cbd5e1">Resources &amp; config</span><span class="tiny" style="color:var(--dim)">optional</span></div>'+
+    '<div class="flex ai-c jb mb8"><span class="tiny" style="font-weight:600;color:#94a3b8">Bindings</span>'+
+    '<button class="btn ghost xs" id="addBind">'+icon('plus')+' Add binding</button></div>'+
+    (bRow||'<div class="tiny muted mb8">Add KV, D1, R2, or AI Search bindings. The resource is created on the account if it does not exist.</div>')+
+    '<div class="flex ai-c jb mb8 mt12"><span class="tiny" style="font-weight:600;color:#94a3b8">Environment variables</span>'+
+    '<button class="btn ghost xs" id="addEnv">'+icon('plus')+' Add variable</button></div>'+
+    (eRow||'<div class="tiny muted mb8">Values are stored encrypted and applied to the project once the first deploy succeeds.</div>')+
+    '<div class="flex ai-c jb g8 mt16" style="border-top:1px solid var(--line);padding-top:12px">'+
+    '<div><div style="font-size:12.5px;font-weight:600">Preview deployments</div><div class="tiny dim">Per-branch preview workers</div></div>'+
+    '<div class="toggle'+(W.preview?' on':'')+'" id="togPrev"></div></div>'+
+    '<div class="flex ai-c jb g8 mt12" style="border-top:1px solid var(--line);padding-top:12px">'+
+    '<div><div style="font-size:12.5px;font-weight:600">Provisioning from code</div><div class="tiny dim">Create KV/D1/R2/AI Search on push</div></div>'+
+    '<div class="toggle'+(W.provision?' on':'')+'" id="togProv"></div></div>'+
+    '</div></div>':'')+
+   '<div id="launchErr"></div>'+
+   '</div>'+
+   '<div class="sticky">'+
+   '<div class="card mb16"><div class="card-head"><span class="ttl">Summary</span></div><div class="card-body" style="padding:12px 16px">'+
+   dl('Template',t.name)+dl('Platform',platform(t))+'<div class="dl"><dt>Project</dt><dd class="mono" id="sumName">'+(W.name||'—')+'</dd></div>'+
+   dl('Visibility',W.priv?'Private':'Public')+dl('Bindings',W.binds.length)+dl('Env vars',W.envs.length)+'</div></div>'+
+   '<button class="btn primary wood" id="launchBtn" style="width:100%;height:40px;font-size:14px">'+icon('rocket')+' Launch</button>'+
+   '<div class="tiny dim mt8" style="text-align:center">Scaffolds → creates GitHub repo → sets secrets → pushes → GitHub Actions deploys</div>'+
+   '</div></div></div>';
+}
+function wireHome(){
+  var openImport=$('openImport');if(openImport)openImport.onclick=function(){W.importMode=true;W.importUrl='https://github.com/acme/static-landing';refresh()};
+  var cats=document.querySelectorAll('#view [data-cat]');
+  cats.forEach(function(el){el.onclick=function(){W.category=el.dataset.cat;W.step=2;W.tpl=null;refresh()}});
+  var openTpls=document.querySelectorAll('#view [data-open-tpl]');
+  openTpls.forEach(function(el){el.onclick=function(){var t=tplById(el.dataset.openTpl);if(t.coming)return;W.tpl=t;W.step=3;refresh()}});
+  var detBtns=document.querySelectorAll('#view [data-details]');
+  detBtns.forEach(function(el){el.onclick=function(e){e.stopPropagation();W.details=tplById(el.dataset.details);refresh();openModal(tplDetailsModal())}});
+  var back1=$('backStep1');if(back1)back1.onclick=function(){W.step=1;W.category=null;refresh()};
+  var back2=$('backStep2');if(back2)back2.onclick=function(){W.step=2;W.tpl=null;refresh()};
+  /* modal */
+  var ct=$('closeTpl');if(ct)ct.onclick=function(){W.details=null;closeModal();refresh()};
+  var ct2=$('closeTpl2');if(ct2)ct2.onclick=function(){W.details=null;closeModal();refresh()};
+  var use=$('useTpl');if(use)use.onclick=function(){W.tpl=W.details;W.step=3;W.details=null;closeModal();refresh()};
+  /* step3 */
+  var wName=$('wName');if(wName)wName.oninput=function(){W.name=wName.value;$('sumName').textContent=W.name||'—'};
+  var optPriv=$('optPriv'),optPub=$('optPub');
+  if(optPriv)optPriv.onclick=function(){W.priv=true;refresh()};
+  if(optPub)optPub.onclick=function(){W.priv=false;refresh()};
+  var wTok=$('wTok');if(wTok)wTok.oninput=function(){W.cfTok=wTok.value};
+  var wAcct=$('wAcct');if(wAcct)wAcct.oninput=function(){W.acct=wAcct.value};
+  var wPat=$('wPat');if(wPat)wPat.oninput=function(){W.pat=wPat.value};
+  var wAK=$('wAK');if(wAK)wAK.oninput=function(){W.awsKey=wAK.value};
+  var wSK=$('wSK');if(wSK)wSK.oninput=function(){W.awsSec=wSK.value};
+  var wReg=$('wReg');if(wReg)wReg.oninput=function(){W.awsReg=wReg.value};
+  var ab=$('addBind');if(ab)ab.onclick=function(){W.binds.push({type:'kv',name:'',resource:''});refresh()};
+  var ae=$('addEnv');if(ae)ae.onclick=function(){W.envs.push({key:'',value:'',kind:'secret'});refresh()};
+  var tp=$('togPrev');if(tp)tp.onclick=function(){W.preview=!W.preview;refresh()};
+  var tg=$('togProv');if(tg)tg.onclick=function(){W.provision=!W.provision;refresh()};
+  document.querySelectorAll('#view [data-bt]').forEach(function(el){el.onchange=function(){var i=+el.dataset.bt;W.binds[i].type=el.value;refresh()}});
+  document.querySelectorAll('#view [data-bn]').forEach(function(el){el.oninput=function(){W.binds[+el.dataset.bn].name=el.value}});
+  document.querySelectorAll('#view [data-br]').forEach(function(el){el.oninput=function(){W.binds[+el.dataset.br].resource=el.value}});
+  document.querySelectorAll('#view [data-bdel]').forEach(function(el){el.onclick=function(){W.binds.splice(+el.dataset.bdel,1);refresh()}});
+  document.querySelectorAll('#view [data-ek]').forEach(function(el){el.onchange=function(){var i=+el.dataset.ek;W.envs[i].kind=el.value;refresh()}});
+  document.querySelectorAll('#view [data-en]').forEach(function(el){el.oninput=function(){W.envs[+el.dataset.en].key=el.value}});
+  document.querySelectorAll('#view [data-ev]').forEach(function(el){el.oninput=function(){W.envs[+el.dataset.ev].value=el.value}});
+  document.querySelectorAll('#view [data-edel]').forEach(function(el){el.onclick=function(){W.envs.splice(+el.dataset.edel,1);refresh()}});
+  var lb=$('launchBtn');
+  if(lb)lb.onclick=function(){
+    if(!W.name.trim()){fail('Enter a project name first.');return}
+    launchSequence();
+  };
+  function fail(m){var e=$('launchErr');e.innerHTML='<div class="errbox mt8">'+icon('warn')+esc(m)+'</div>';window.scrollTo(0,0)}
+}
+function refresh(){
+  var sc=window.scrollY;
+  $('view').innerHTML=viewHTML();wire();
+  window.scrollTo(0,Math.min(sc,document.body.scrollHeight));
+}
+
+/* ── LAUNCH SEQUENCE ───────────────────────────────────────────── */
+function launchSequence(){
+  var t=W.tpl;
+  var lines=[
+   [0,'Provisions recipe','Scaffolding project from '+t.name],
+   [1,'create github repo',ORG+'/'+W.name+' (private='+W.priv+')'],
+   [2,'set deploy secrets','CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID'+(t.provider==='aws'?', AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION':'')],
+   [3,'scaffold workflow','.github/workflows/deploy.yml written'],
+   [4,'push code','git push origin main — '+W.envs.length+' env var(s), '+W.binds.length+' binding(s)'],
+   [5,'trigger deploy','GitHub Actions run #'+Math.floor(100+Math.random()*400)+' started']
+  ];
+  if(W.binds.length)lines.push([6,'gather resources','KV/D1/R2/AI Search bindings will be created on first deploy']);
+  var html='<div class="modal-head"><div><h2>Launching '+esc(W.name)+'</h2><div class="sub">GitHub → Cloudflare via GitHub Actions</div></div>'+
+   '<span class="pill sky pulse" id="seqPill"><span class="dot"></span>RUNNING</span></div>'+
+   '<div class="modal-body" style="padding:8px 16px"><div class="term">'+
+   '<div class="term-chrome"><div class="tdots"><span class="r"></span><span class="y"></span><span class="g"></span></div><span class="mono" style="font-size:10px;letter-spacing:.08em;color:#475569">launchpad · provisioning</span></div>'+
+   '<div class="term-body" id="seqLog" style="max-height:300px"></div></div></div>'+
+   '<div class="modal-foot"><button class="btn primary wood" id="seqOpen" style="display:none">'+icon('rocket')+' Open project →</button>'+
+   '<button class="btn ghost" id="seqClose">Dismiss</button></div>';
+  openModal(html);
+  var log=$('seqLog'),i=0;
+  function tick(){
+    if(i>=lines.length){finish();return}
+    var L=lines[i];
+    var line='<div class="ok">▸ '+L[0]+'</div><div class="dm">  '+esc(L[1])+'</div>';
+    log.innerHTML+=line;
+    if(i===4&&W.envs.length){W.envs.forEach(function(v){if(v.key.trim())log.innerHTML+='<div class="dm">    env '+esc(v.key)+' ••••••••</div>'})}
+    if(i===4&&W.binds.length){W.binds.forEach(function(b){if(b.name.trim())log.innerHTML+='<div class="dm">    bind '+esc(b.name)+' → '+esc(b.resource||b.type)+'</div>'})}
+    log.scrollTop=log.scrollHeight;
+    i++;setTimeout(tick,i>=3?500:420);
+  }
+  function finish(){
+    log.innerHTML+='<div class="ok">✔ Done — '+esc(W.name)+' is deploying on '+platform(W.tpl)+'</div>';
+    log.scrollTop=log.scrollHeight;
+    $('seqPill').innerHTML='<span class="dot"></span>SUCCESS';
+    $('seqPill').className='pill emerald';
+    $('seqOpen').style.display='inline-flex';
+  }
+  setTimeout(tick,400);
+  var st=$('seqOpen');st.onclick=function(){
+    var proj={id:'p'+Date.now(),name:W.name,tpl:t,templateName:t.name,type:t.type,provider:t.provider,owner:ORG,repo:W.name,
+      createdAt:new Date().toISOString(),status:'running',totalRuns:1,latestRun:99,
+      env:W.envs.filter(function(v){return v.key.trim()}).map(function(v){return {key:v.key,kind:v.kind}}),
+      binds:W.binds.filter(function(b){return b.name.trim()}).map(function(b){return {type:b.type,name:b.name,resource:b.resource||b.type}}),
+      members:[{username:session.username,role:'owner',gh:ORG,ghState:'active'}],invites:[],access:'public',
+      url:deriveURL(t,W.name),activity:[],previews:[{branch:'main',on:true}]};
+    proj.activity=[{at:'just now',actor:session.username,action:'launch',detail:'Launched via wizard from '+platform(t),project:proj.name}];
+    proj.runs=[{runId:99,status:'in_progress',conclusion:null,headSha:'aaaa111',created:'just now',updated:'just now',dur:'—',
+      steps:[{name:'Checkout code',s:'in_progress',c:null}],text:'Run #99 for '+proj.name+' started just now.\n\n• Checkout code' }];
+    logAudit(session.username,'launch',proj.name,'Launched '+proj.name+' ('+t.id+') on '+platform(t),'ok');
+    PROJECTS.unshift(proj);
+    closeModal();
+    W.name='';W.binds=[];W.envs=[];W.preview=true;W.provision=true;
+    toast('Project '+proj.name+' launched','ok');
+    go('project',{id:proj.id});
+  };
+  var dc=$('seqClose');dc.onclick=function(){if(log.innerHTML.indexOf('Done')<0){toast('Launched in background — check Projects','info');closeModal();go('projects')}};
+}
+function deriveURL(t,name){
+  if(t.provider==='aws')return t.type==='amplify'?'https://main.d2x9k1p7jqr6yb.amplifyapp.com':'https://7h29f.execute-api.us-east-1.amazonaws.com/prod';
+  return t.type==='pages'?'https://'+name+'.pages.dev':'https://'+name+'.newpage.workers.dev';
+}
+
+/* ── IMPORT EXISTING PROJECT ───────────────────────────────────── */
+function vImport(){
+  var a=W.importAnalysis;
+  var H='<div class="page-narrow">'+
+   '<div class="flex ai-c jb mb16"><div><div style="font-size:20px;font-weight:650">Deploy an existing project</div>'+
+   '<div class="muted tiny mt4">Paste a GitHub repository URL and we’ll deploy it to Cloudflare for you.</div></div>'+
+   '<button class="btn ghost sm" id="backHomeI">'+icon('back')+' Back</button></div>';
+  if(!a){
+    H+='<div class="card mb16"><div class="card-body">'+
+     '<div class="field"><label for="iu">GitHub repository URL</label><input class="input mono" id="iu" value="'+esc(W.importUrl)+'" placeholder="https://github.com/owner/repo">'+
+     '<span class="help">The repo stays in place; Launchpad adds a deploy workflow and Cloudflare config to it.</span></div>'+
+     '<div class="field"><label for="ipat">GitHub Personal Access Token</label><input class="input mono" id="ipat" type="password" value="'+esc(W.importPat)+'" placeholder="Set via .env (optional here)"></div>'+
+     '<div class="flex ai-c g8 mb16"><button class="btn ghost xs" id="exReady">Try: ready-to-deploy repo</button>'+
+     '<button class="btn ghost xs" id="exBlock">Try: repo needing changes</button></div>'+
+     '<div id="impErr"></div>'+
+     '<button class="btn primary wood" id="analyzeBtn" style="width:100%;height:38px">'+icon('search')+' Analyze and plan the deploy</button>'+
+     '</div></div>';
+  }else if(a.analyzing){
+    H+='<div class="card mb16"><div class="card-body" style="text-align:center;padding:36px 16px">'+
+     '<span class="spin" style="display:inline-block;width:18px;height:18px;border-width:2px;margin-bottom:12px"></span>'+
+     '<div style="font-weight:600;font-size:14px">Analyzing <span class="mono">'+esc(W.importUrl)+'</span>…</div>'+
+     '<div class="tiny dim mt4">Checking framework, build steps, and deployability on Cloudflare.</div>'+
+     '</div></div>';
+  }else if(!a.plan){
+    H+='<div class="amberbox mb16">'+icon('warn')+'<div><b>Hmm, this one needs a hand.</b><br><span class="dim">'+esc(a.reason)+'</span></div></div>'+
+     '<div class="card mb16"><div class="card-body">'+
+     ((a.blockers&&a.blockers.length)?'<div class="tiny dim mb8">Detected: <b class="muted">'+esc(a.blockers.join(', '))+'</b></div>':'')+
+     '<div class="snippet" style="border:1px solid var(--line-2)">'+a.instruction+'</div>'+
+     '<div class="tiny dim mt8">Ask your AI tool to do this, then re-analyze.</div>'+
+     '</div></div>'+
+     '<button class="btn ghost" id="retryI" style="width:100%">Analyze a different repo</button>';
+  }else{
+    var P=a.plan;
+    H+='<div class="flex ai-c g8 mb12"><span class="chip sky" style="color:#6ee7b7;border-color:rgba(52,211,153,.35)">Ready to deploy</span>'+
+     '<span class="muted tiny">'+esc(a.framework)+' · '+(P.deployKind==='pages'?'Cloudflare Pages':'Cloudflare Workers')+'</span></div>'+
+     '<div class="mb16"><div class="card mb12"><div class="card-body" style="padding:13px 16px">'+
+     '<div class="tiny" style="font-weight:600;color:#94a3b8;margin-bottom:6px">What Launchpad will do</div>'+
+     '<div style="font-size:13px">'+esc(P.summary)+'</div>'+
+     (P.notes.length?'<ul style="margin:8px 0 0;padding-left:18px;font-size:11.5px;color:#94a3b8">'+P.notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul>':'')+
+     '<div class="dl mt12"><dt>Build command</dt><dd class="mono">'+(P.buildCommand||'—')+'</dd></div>'+
+     '<div class="dl"><dt>Deploy command</dt><dd class="mono">'+P.deployCommand+'</dd></div>'+
+     '<div class="dl"><dt>Package manager</dt><dd>'+(P.packageManager||'—')+'</dd></div></div></div>'+
+     '<div class="field"><label for="ipn">Project name</label><input class="input mono" id="ipn" value="'+esc(W.importProj)+'" placeholder="my-app"><span class="help">Used as the Cloudflare project/worker name.</span></div>';
+    P.envVars.forEach(function(v){
+      H+='<div class="field"><label>'+esc(v.key)+'</label><input class="input mono" id="iev_'+esc(v.key)+'" type="'+(v.kind==='secret'?'password':'text')+'" placeholder="'+(v.kind==='secret'?'Leave blank to keep empty':'')+'" value="'+(W.importEnv[v.key]?esc(W.importEnv[v.key]):'')+'"></div>'});
+    H+='<div id="impErr2"></div>'+
+     '<button class="btn primary wood" id="deployI" style="width:100%;height:38px">Looks good, deploy →</button>'+
+     '<button class="btn ghost sm mt8" id="backI" style="width:100%">Analyze a different repo</button>'+
+     '</div>'+
+     '<div class="card"><div class="card-head"><span class="ttl">Repo summary</span></div><div class="card-body" style="padding:12px 16px">'+
+     '<div class="dl"><dt>Repo</dt><dd>'+esc(a.repoTitle)+'</dd></div>'+
+     '<div class="dl"><dt>Default branch</dt><dd class="mono">'+esc(a.defaultBranch)+'</dd></div>'+
+     '<div class="dl"><dt>Files analyzed</dt><dd>'+a.files+'</dd></div>'+
+     '<div class="dl"><dt>Deploy target</dt><dd>'+(P.deployKind==='pages'?'Cloudflare Pages':'Cloudflare Workers')+'</dd></div></div></div>';
+  }
+  return H+'</div>';
+}
+function analyzeDemo(kind){
+  W.importAnalysis={analyzing:true};refresh();
+  setTimeout(function(){
+    if(kind==='ready'){
+      W.importAnalysis={plan:{deployKind:'pages',buildCommand:'npm run build',deployCommand:'npx wrangler pages deploy dist --project-name=__PROJECT_NAME__',
+        packageManager:'npm',summary:'Launchpad adds a Cloudflare Pages project, a GitHub Actions deploy workflow and env-var secrets to your existing repo.',
+        notes:['Your repo stays exactly where it is','The deploy workflow builds the Astro site and publishes it to Pages'],
+        envVars:[{key:'PUBLIC_API_URL',kind:'text'},{key:'CONTACT_SECRET',kind:'secret'}]},
+        detection:{framework:'Astro (Vite)'},repoTitle:'static-landing',defaultBranch:'main',files:32};
+      W.importProj='static-landing';
+    }else{
+      W.importAnalysis={plan:null,reason:'This app uses Node 14 APIs and reads config from environment variables that are not deployment-friendly, so it won’t run on Cloudflare out of the box.',
+        blockers:['Node 14 runtime','process.env loaded at module scope','Missing build output directory'],
+        detection:{framework:'Legacy Express (Node 14)'},
+        instruction:'1) Upgrade to Node 18+ and the current Express major.\n2) Move config to env vars declared in wrangler.toml.\n3) Add a build step that outputs to dist/ so the Pages pipeline can publish it.\n\nThen push and re-run Déploy de l’existant.'};
+    }
+    W.importAnalysis.analyzing=false;refresh();W.importAnalysis.analyzing=false;
+    window.scrollTo(0,0);
+  },1400);
+}
+function wireImport(){
+  var back=$('backHomeI');if(back)back.onclick=function(){W.importMode=false;W.importAnalysis=null;refresh()};
+  var iu=$('iu');if(iu)iu.oninput=function(){W.importUrl=iu.value};
+  var ip=$('ipat');if(ip)ip.oninput=function(){W.importPat=ip.value};
+  var er=$('exReady');if(er)er.onclick=function(){W.importUrl='https://github.com/acme/static-landing';refresh()};
+  var eb=$('exBlock');if(eb)eb.onclick=function(){W.importUrl='https://github.com/acme/legacy-monolith';refresh()};
+  var ab=$('analyzeBtn');if(ab)ab.onclick=function(){
+    if(!W.importUrl.trim()){$('impErr').innerHTML='<div class="errbox">'+icon('warn')+'Paste a GitHub repository URL first.</div>';return}
+    var kind=W.importUrl.indexOf('monolith')>-1?'block':'ready';
+    $('analyzeBtn').disabled=true;$('analyzeBtn').innerHTML='<span class="spin"></span> Analyzing…';
+    setTimeout(function(){W.importAnalysis={analyzing:false};analyzeDemo(kind);},700);
+  };
+  var ri=$('retryI');if(ri)ri.onclick=function(){W.importAnalysis=null;refresh()};
+  var bi=$('backI');if(bi)bi.onclick=function(){W.importAnalysis=null;refresh()};
+  var ipn=$('ipn');if(ipn)ipn.oninput=function(){W.importProj=ipn.value};
+  if(W.importAnalysis&&W.importAnalysis.plan){
+    W.importAnalysis.plan.envVars.forEach(function(v){var el=$('iev_'+esc(v.key));if(el)el.oninput=function(){W.importEnv[v.key]=el.value}});
+  }
+  var di=$('deployI');if(di)di.onclick=function(){
+    if(!W.importProj.trim()){$('impErr2').innerHTML='<div class="errbox">'+icon('warn')+'Enter a project name.</div>';return}
+    di.disabled=true;di.innerHTML='<span class="spin"></span> Deploying…';
+    setTimeout(function(){
+      var t=tplById('pages-static');
+      var proj={id:'p'+Date.now(),name:W.importProj,tpl:t,templateName:'via Import · '+W.importProj,type:'pages',provider:'cloudflare',owner:'acme',
+        repo:W.importUrl.split('/').pop(),createdAt:new Date().toISOString(),status:'running',totalRuns:1,latestRun:88,
+        env:[],binds:[],members:[{username:session.username,role:'owner',gh:ORG,ghState:'active'}],invites:[],access:'public',
+        url:'https://'+W.importProj+'.pages.dev',imported:true,activity:[],previews:[]};
+      proj.activity=[{at:'just now',actor:session.username,action:'launch',detail:'Deployed existing repo '+W.importUrl,project:proj.name}];
+      proj.runs=[{runId:88,status:'in_progress',conclusion:null,headSha:'bb2c991',created:'just now',updated:'just now',dur:'—',
+        steps:[{name:'Analyze repo',s:'completed',c:'success'},{name:'Add deploy workflow',s:'completed',c:'success'},{name:'Deploy to Cloudflare Pages',s:'in_progress',c:null}],
+        text:'Import deploy for '+proj.name+'\n\n✔ Analyzed repo\n✔ Added GitHub Actions workflow\n• Deploying to Cloudflare Pages'}];
+      logAudit(session.username,'launch',proj.name,'Imported '+W.importUrl+' to Cloudflare Pages','ok');
+      PROJECTS.unshift(proj);
+      W.importMode=false;W.importAnalysis=null;W.importProj='';W.importUrl='';
+      toast('Deploying '+proj.name+' to Cloudflare Pages','ok');
+      go('project',{id:proj.id});
+    },1600);
+  };
+}
+
+/* ── TEMPLATES BROWSER ─────────────────────────────────────────── */
+function vTemplates(){
+  var grid=TPLS.map(function(t){
+    var isAmp=t.coming;
+    return '<div class="tile" '+(isAmp?'style="opacity:.75"':'data-open-tpl2="'+t.id+'" style="cursor:pointer"')+'>'+
+     '<div class="flex ai-s jb g8"><span style="font-weight:600;font-size:13.5px">'+t.name+'</span><span class="chip '+(t.provider==='aws'?'aws':'')+'">'+platform(t)+'</span></div>'+
+     '<span class="muted tiny mt8" style="flex:1">'+t.desc+'</span><div class="chiprow mt12">'+chipTags(t)+'</div>'+
+     (isAmp?'<button class="btn ghost sm mt16" disabled style="width:100%;justify-content:center">Coming Soon</button>'
+      :'<button class="btn ghost sm mt16" data-details2="'+t.id+'" style="width:100%;justify-content:center">View details</button>')+
+     '</div>'}).join('');
+  return '<div class="page pagehead"><div class="pagehead row"><div><h1>Templates</h1>'+
+   '<div class="sub">Every stack available on this Launchpad. Open a template to see its full details.</div></div>'+
+   '<button class="btn primary wood" data-nav="home">'+icon('plus')+' New launch</button></div>'+
+   '<div class="tplgrid">'+grid+'</div>'+
+   (W.details?tplDetailsModal():'')+'</div>';
+}
+function wireTemplates(){
+  document.querySelectorAll('#view [data-open-tpl2]').forEach(function(el){el.onclick=function(){var t=tplById(el.dataset.openTpl2);if(t.coming)return;W.tpl=t;W.name='';W.step=3;go('home')}});
+  document.querySelectorAll('#view [data-details2]').forEach(function(el){el.onclick=function(e){e.stopPropagation();W.details=tplById(el.dataset.details2);openModal(tplDetailsModal())}});
+  var ct=$('closeTpl');if(ct)ct.onclick=function(){W.details=null;closeModal()};
+  var ct2=$('closeTpl2');if(ct2)ct2.onclick=function(){W.details=null;closeModal()};
+  var use=$('useTpl');if(use)use.onclick=function(){W.tpl=W.details;W.step=3;W.name='';W.details=null;closeModal();go('home')};
+}
+
+/* ── PROJECTS TABLE ────────────────────────────────────────────── */
+var PState={filter:'all',query:'',selected:{}};
+function vProjects(){
+  var counts={all:PROJECTS.length,running:0,success:0,failed:0};
+  PROJECTS.forEach(function(p){var g=groupOf(p.status);if(g!=='all')counts[g]++});
+  var q=PState.query.trim().toLowerCase();
+  var vis=PROJECTS.filter(function(p){
+    if(q&&p.name.toLowerCase().indexOf(q)<0)return false;
+    if(PState.filter==='all')return true;
+    return groupOf(p.status)===PState.filter});
+  var rows=vis.map(function(p){
+    return '<tr data-row="'+p.id+'">'+
+     '<td><input type="checkbox" class="rowcb" data-cb="'+p.id+'" '+(PState.selected[p.id]?'checked':'')+'></td>'+
+     '<td><a class="flex ai-c g8" data-open-proj="'+p.id+'" style="font-weight:600;color:#fff;font-size:13px">'+
+     dotHTML(p.status)+esc(p.name)+'</a></td>'+
+     '<td><div class="flex ai-c g8"><span class="trunc">'+esc(p.tpl.name)+'</span><span class="chip '+(p.type==='pages'?'':'sky')+'">'+p.type+'</span></div></td>'+
+     '<td>'+statusPill(p.status)+'</td>'+
+     '<td>'+(p.url?'<a class="iconlink" href="'+p.url+'" title="'+esc(p.url)+'">Visit'+icon('ext','')+'</a>':'<span class="dim">—</span>')+'</td>'+
+     '<td><a class="iconlink mono" title="'+esc(p.owner+'/'+p.repo)+'" style="font-size:12px">'+
+     '<span style="display:inline-flex;align-items:center;gap:5px">'+icon('gh')+esc(p.owner)+'/'+esc(p.repo)+'</span></a></td>'+
+     '<td class="muted" style="white-space:nowrap">'+shortDate(p.createdAt)+'</td>'+
+     '<td style="text-align:right;white-space:nowrap">'+
+     (p.runs.length?'<button class="btn ghost xs" data-logs="'+p.id+'">Logs</button>':'')+
+     '<button class="btn ghost xs" data-del="'+p.id+'">Delete</button></td></tr>'}).join('');
+  var selCount=Object.keys(PState.selected).length;
+  var selBar=selCount?'<div class="flex ai-c jb mb12" style="border:1px solid rgba(246,130,31,.3);background:rgba(246,130,31,.05);border-radius:9px;padding:8px 12px">'+
+   '<span style="font-size:13px"><b>'+selCount+'</b> selected</span>'+
+   '<span class="flex g8"><button class="btn ghost xs" id="clearSel">Clear selection</button>'+
+   '<button class="btn danger xs" id="bulkDel">Delete selected</button></span></div>':'';
+  return '<div class="page pagehead"><div class="pagehead row"><div><h1>Projects</h1>'+
+   '<div class="sub">Apps launched through this Launchpad, with their latest deploy status.</div></div>'+
+   '<button class="btn primary wood" data-nav="home">'+icon('plus')+' New launch</button></div>'+
+   '<div class="flex ai-c jb flex-wrap g8 mb16">'+
+   '<div class="flex g8">'+[['all','All'],['running','Deploying'],['success','Deployed'],['failed','Failed']].map(function(f){
+     return '<button class="btn ghost sm '+ (PState.filter===f[0]?'':'')+'" data-filter="'+f[0]+'" style="'+(PState.filter===f[0]?'border-color:var(--accent);color:#fff;background:#1e293b':'')+'">'+f[1]+' <span class="dim" style="font-weight:500">'+counts[f[0]]+'</span></button>'}).join('')+'</div>'+
+   '<input class="input" id="projSearch" value="'+esc(PState.query)+'" placeholder="Search projects…" style="width:230px"></div>'+
+   selBar+
+   (vis.length
+    ?'<div class="tblwrap"><table class="tbl"><thead><tr>'+
+     '<th style="width:30px"><input type="checkbox" id="cbAll" '+(vis.every(function(p){return PState.selected[p.id]})&&vis.length?'checked':'')+'></th>'+
+     '<th>Project</th><th>Template</th><th>Status</th><th>URL</th><th>Repository</th><th>Launched</th><th style="width:120px"></th>'+
+     '</tr></thead><tbody>'+rows+'</tbody></table></div>'
+    :'<div class="empty">'+(PROJECTS.length===0?'No projects yet. <a class="accent" data-nav="home">Launch your first app</a>.':'No projects match your filters.')+'</div>')+
+   '</div>';
+}
+function groupOf(s){if(s==='running'||s==='queued')return 'running';if(s==='success')return 'success';if(s==='failure')return 'failed';return 'all'}
+function dotHTML(s){var m=STATUS_META[s]||STATUS_META.unknown;
+  return '<span class="'+(s==='success'?'dot-ok':s==='failure'?'dot-red':s==='no-runs'?'dot-dim':(s==='queued')?'dot-pulse':'dot-pulse')+'"></span>'}
+function wireProjects(){
+  document.querySelectorAll('#view [data-filter]').forEach(function(el){el.onclick=function(){PState.filter=el.dataset.filter;refresh()}});
+  var s=$('projSearch');if(s)s.oninput=function(){PState.query=s.value;refresh()};
+  var cbAll=$('cbAll');if(cbAll)cbAll.onchange=function(){
+    document.querySelectorAll('#view .rowcb').forEach(function(cb){PState.selected[cb.dataset.cb]=cbAll.checked});
+    refresh()};
+  document.querySelectorAll('#view .rowcb').forEach(function(cb){cb.onchange=function(){PState.selected[cb.dataset.cb]=cb.checked;refresh()}});
+  var cs=$('clearSel');if(cs)cs.onclick=function(){PState.selected={};refresh()};
+  document.querySelectorAll('#view [data-open-proj]').forEach(function(el){el.onclick=function(){P.tab='overview';go('project',{id:el.dataset.openProj})}});
+  document.querySelectorAll('#view [data-logs]').forEach(function(el){el.onclick=function(){var p=projById(el.dataset.logs);showLogsModal(p,0)}});
+  document.querySelectorAll('#view [data-del]').forEach(function(el){el.onclick=function(){deleteModal(projById(el.dataset.del))}});
+  var bd=$('bulkDel');if(bd)bd.onclick=function(){
+    var sel=PROJECTS.filter(function(p){return PState.selected[p.id]});
+    bulkDeleteModal(sel);
+  };
+}
+function projById(id){return PROJECTS.find(function(p){return p.id===id})}
+
+/* ── logs modal ────────────────────────────────────────────────── */
+function showLogsModal(p,runIdx){
+  var run=p.runs[runIdx];
+  var steps=run.steps.map(function(s,ix){
+    var st='slate';if(s.c==='success')st='emerald';else if(s.s==='in_progress'||s.s==='queued')st='sky';else if(s.c==='failure')st='red';
+    return '<div class="flex ai-c jb g8" style="padding:8px 4px;border-bottom:1px solid var(--line-soft)"><span class="mono" style="font-size:12px">'+s.name+'</span>'+
+     '<span class="pill '+st+'">'+(s.c||s.s)+'</span></div>'}).join('');
+  openModal('<div class="modal-head"><div><h2>Deploy log — run #'+run.runId+'</h2><div class="sub">'+esc(p.owner+'/'+p.repo)+'</div></div>'+
+   '<button class="icon-btn" id="lgClose">'+icon('x')+'</button></div>'+
+   '<div class="modal-body" style="width:560px;max-width:94vw">'+steps+
+   '<div class="snippet mt12" style="max-height:220px;overflow:auto">'+esc(run.text)+'</div></div>'+
+   '<div class="modal-foot"><button class="btn ghost" id="lgClose2">Close</button></div>');
+  $('lgClose').onclick=closeModal;$('lgClose2').onclick=closeModal;
+  document.addEventListener('keydown',escKey);
+}
+function deleteModal(p){
+  openModal('<div class="modal-head"><div><h2>Delete '+esc(p.name)+'?</h2><div class="sub">This removes the project from Launchpad and deletes the resources you select below. This cannot be undone.</div></div>'+
+   '<button class="icon-btn" id="dx">'+icon('x')+'</button></div>'+
+   '<div class="modal-body" style="width:440px;max-width:94vw">'+
+   '<label class="flex ai-c g8 mb12" style="border:1px solid var(--line);background:rgba(15,23,42,.5);border-radius:9px;padding:10px 12px;font-size:13px"><input type="checkbox" id="dRepo" checked>Delete the GitHub repo <code class="mono" style="font-size:11px;color:#94a3b8">'+esc(p.owner+'/'+p.repo)+'</code></label>'+
+   '<label class="flex ai-c g8 mb12" style="border:1px solid var(--line);background:rgba(15,23,42,.5);border-radius:9px;padding:10px 12px;font-size:13px"><input type="checkbox" id="dCF" checked>Delete the '+(p.provider==='aws'?(p.type==='amplify'?'AWS Amplify app':'AWS Lambda stack'):'Cloudflare '+(p.type==='pages'?'Pages':'Workers')+' project')+'</label>'+
+   '<div class="field mb0"><label>Type <code class="mono">'+esc(p.name)+'</code> to confirm</label>'+
+   '<input class="input" id="dConfirm" placeholder="'+esc(p.name)+'"></div>'+
+   '<div id="dErr"></div></div>'+
+   '<div class="modal-foot"><button class="btn ghost" id="dx2">Cancel</button>'+
+   '<button class="btn danger" id="dGo" disabled>Delete</button></div>');
+  $('dx').onclick=closeModal;$('dx2').onclick=closeModal;
+  $('dGo').onclick=function(){
+    var name=$('dConfirm').value.trim();
+    if(name!==p.name){$('dErr').innerHTML='<div class="errbox mt8">'+icon('warn')+'Name did not match.</div>';return}
+    var ci=PROJECTS.indexOf(p);if(ci>-1){PROJECTS.splice(ci,1)}
+    logAudit(session.username,'delete',p.name,'Deleted project and '+(p.provider==='aws'?(p.type==='amplify'?'Amplify app':'Lambda stack'):'Cloudflare project')+' (repo '+(($('dRepo').checked)?'removed':'kept')+')','ok');
+    closeModal();toast('Project '+p.name+' deleted','ok');
+    if(VIEW.name==='project')go('projects');else refresh();
+  };
+  $('dConfirm').oninput=function(){$('dGo').disabled=$('dConfirm').value.trim()!==p.name};
+  document.addEventListener('keydown',escKey);
+}
+function bulkDeleteModal(sel){
+  var names=sel.map(function(p){return esc(p.name)}).join(', ');
+  openModal('<div class="modal-head"><div><h2>Delete '+sel.length+' projects?</h2><div class="sub">'+names+'</div></div>'+
+   '<button class="icon-btn" id="bx">'+icon('x')+'</button></div>'+
+   '<div class="modal-body" style="width:440px;max-width:94vw"><div class="muted tiny">Each project’s GitHub repo and Cloudflare/AWS resources will be deleted. Type the number of projects to confirm.</div>'+
+   '<div class="field mt12 mb0"><label>Type <code class="mono">'+sel.length+'</code> to confirm</label><input class="input" id="bConfirm"></div>'+
+   '<div id="bErr"></div></div>'+
+   '<div class="modal-foot"><button class="btn ghost" id="bx2">Cancel</button><button class="btn danger" id="bGo" disabled>Delete '+sel.length+' projects</button></div>');
+  $('bx').onclick=closeModal;$('bx2').onclick=closeModal;
+  $('bGo').onclick=function(){
+    if($('bConfirm').value.trim()!==''+sel.length){$('bErr').innerHTML='<div class="errbox mt8">'+icon('warn')+'Number did not match.</div>';return}
+    sel.forEach(function(p){var i=PROJECTS.indexOf(p);if(i>-1)PROJECTS.splice(i,1)});
+    PState.selected={};
+    closeModal();toast(sel.length+' projects deleted','ok');refresh();
+  };
+  $('bConfirm').oninput=function(){$('bGo').disabled=$('bConfirm').value.trim()!==''+sel.length};
+  document.addEventListener('keydown',escKey);
+}
+
+/* ── PROJECT DETAIL ────────────────────────────────────────────── */
+function vProject(){
+  var p=projById(VIEW.params.id);
+  if(!p)return '<div class="page-narrow"><div class="empty">Project not found. <a class="accent" data-nav="projects">Back to projects</a></div></div>';
+  var m=STATUS_META[p.status];
+  var tabs=[['overview','Overview'],['deploys','Deploy History'],['env','Environment'],['bindings','Bindings'],['members','Members'],['access','Access'],['activity','Activity']];
+  var tb=tabs.map(function(t){
+    var active=P.tab===t[0];
+    return '<button class="tab'+(active?' active':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('');
+  var right='';
+  var body='';
+  var typeBadge=p.type==='pages'?'pill purple':'pill sky';
+  var platformLabel=p.provider==='aws'?(p.type==='amplify'?'AWS Amplify':'AWS Lambda'):(p.type==='pages'?'Pages':'Workers');
+
+  if(P.tab==='overview'){
+    var latest=p.runs[0];
+    body=overviewTab(p,latest,platformLabel);
+  }else if(P.tab==='deploys'){body=deploysTab(p)}
+  else if(P.tab==='env'){body=envTab(p)}
+  else if(P.tab==='bindings'&&p.provider==='cloudflare'){body=bindingsTab(p)}
+  else if(P.tab==='members'){body=membersTab(p)}
+  else if(P.tab==='access'){body=accessTab(p)}
+  else if(P.tab==='activity'){body='<div class="card"><div class="card-head"><span class="ttl">'+icon('act')+' Activity</span>'+
+    '<span style="margin-left:auto;font-size:11px;color:var(--dim)">'+p.activity.length+' entries</span></div><div class="card-body">'+activityHTML(p.activity)+'</div></div>'}
+
+  return '<div class="hero"><div style="max-width:1200px;margin:0 auto;padding:0 24px">'+
+   '<div class="flex ai-c g8" style="padding:20px 0 6px;font-size:12px;color:var(--dim)" id="crumb">'+
+   '<a class="iconlink" data-nav="projects">Projects</a><span>/</span><span style="color:#cbd5e1">'+esc(p.name)+'</span></div>'+
+   '<div class="flex ai-s jb flex-wrap" style="padding:14px 0 18px;gap:16px">'+
+   '<div class="flex ai-c g12">'+
+   '<div class="avatar">'+esc(p.name.slice(0,2).toUpperCase())+'</div>'+
+   '<div><div class="flex ai-c flex-wrap g8"><h1 style="font-size:22px;font-weight:700;margin:0">'+esc(p.name)+'</h1>'+statusPill(p.status)+'</div>'+
+   '<div class="flex ai-c flex-wrap g12 mt8" style="font-size:12.5px;color:var(--dim)">'+
+   '<a class="iconlink" style="font-size:12.5px"><span class="flex ai-c g5">'+icon('gh')+esc(p.owner)+'/'+esc(p.repo)+'</span></a>'+
+   '<span class="pill '+typeBadge+'">'+p.type+'</span><span class="chip">'+esc(p.tpl.name)+'</span></div></div></div>'+
+   '<div class="flex ai-c flex-wrap g8">'+
+   (p.url?'<a class="btn primary wood" href="'+p.url+'">Visit '+icon('ext')+'</a>'+
+    '<button class="icon-btn" id="copyUrl" data-copy="'+esc(p.url)+'" title="Copy URL">'+icon('copy')+'</button>':'')+
+   '<button class="btn ghost" id="redeploy">'+icon('refr')+' Re-deploy</button>'+
+   '<div style="position:relative"><button class="icon-btn" id="overflowBtn">'+icon('more')+'</button>'+
+   '<div id="overflowMenu" style="display:none" class="menu">'+
+   '<button id="ovRepo" style="justify-content:flex-start"><span class="dim">'+icon('ext')+'</span> View repo</button>'+
+   '<button id="ovDel" class="red"><span>'+icon('trash')+'</span> Delete project</button></div></div></div>'+
+   '</div><div class="tabs">'+tb+'</div></div></div>'+
+   '<div class="page wide" style="padding-top:24px">'+
+   '<div id="noticeBox"></div>'+body+'</div>';
+}
+function overviewTab(p,latest,platformLabel){
+  var right='';
+  // right rail
+  right+='<div class="sticky" style="display:flex;flex-direction:column;gap:16px">';
+  // live logs
+  right+='<div class="term"><div class="term-chrome"><div class="tdots"><span class="r"></span><span class="y"></span><span class="g"></span></div>'+
+   '<span class="mono" style="font-size:10px;letter-spacing:.08em;color:#475569">live tail · workers only</span>'+icon('term','')+'</div>'+
+   '<div class="flex ai-c g8" style="padding:10px 14px;border-bottom:1px solid var(--line-soft);background:rgba(7,13,28,.6)">'+icon('branch','')+
+   '<select class="input mono" id="llBranchSidebar" style="flex:1;font-size:12px;padding:5px 26px 5px 8px"><option>main</option><option>dev</option><option>staging</option><option>feature/preview</option></select>'+
+   '<button class="btn primary wood xs" data-nav-live="'+p.id+'">Live Logs</button></div>'+
+   '<div class="term-body" style="max-height:none;font-size:11px">Select a branch and open Live Logs to stream real requests to this worker.</div></div>';
+  // previews
+  if(p.provider==='cloudflare'){
+    right+='<div class="card"><div class="card-head" style="border:none;padding-bottom:4px"><span class="ttl">Preview deployments</span>'+
+     '<span style="margin-left:auto" class="pill '+(p.type==='worker'?'emerald':'slate')+'">'+(p.type==='worker'?'Enabled':'n/a')+'</span></div>'+
+     '<div class="card-body" style="padding-top:6px">';
+    if(p.type==='pages'){
+      right+='<div class="tiny dim">Per-branch preview deployments are not yet supported for Pages projects.</div>';
+    }else{
+      right+=(p.previews&&p.previews.length>1
+        ?p.previews.slice(1).map(function(pr){return '<div class="flex ai-c g8" style="padding:6px 0;border-bottom:1px solid var(--line-soft)"><span class="dot-ok"></span>'+
+          '<span class="mono trunc flex1" style="font-size:12px">'+pr.branch+'</span>'+
+          '<span class="mono" style="font-size:10.5px;color:var(--accent-hi)">'+esc(pr.name)+'.workers.dev</span></div>'}).join('')
+        :'<div class="tiny dim">Push to any branch (other than main) — Launchpad spins up a per-branch worker automatically.</div>')+
+        '<p class="tiny dim mt8">Separate KV/D1/R2 resources + same env vars. Torn down when the branch is deleted or its PR closes.</p>';
+    }
+    right+='</div></div>';
+    // provisioning
+    right+='<div class="card"><div class="card-head" style="border:none;padding-bottom:4px"><span class="ttl">Provisioning from code</span>'+
+     '<span style="margin-left:auto" class="pill '+(p.provider==='cloudflare'&&p.type==='worker'?'emerald':'slate')+'">'+(p.type==='worker'?'Enabled':'n/a')+'</span></div>'+
+     '<div class="card-body" style="padding-top:6px">'+
+     (p.type==='worker'
+      ?'<div class="tiny dim">Add a KV/D1/R2 binding without an ID to <code class="mono">wrangler.toml</code> and push — it is created automatically on deploy.</div>'+
+       '<div class="snippet mt8" style="font-size:10px">[[kv_namespaces]]<br>binding = "CACHE"  <span class="dm"># no id → created on push</span></div>'
+      :'<div class="tiny dim">Provisioning from pushed code is not supported for Pages projects.</div>')+
+     '</div></div>';
+  }
+  // activity
+  right+='<div class="card"><div class="card-head" style="border:none;padding-bottom:4px"><span class="ttl">Activity</span></div>'+
+   '<div class="card-body" style="padding-top:4px">'+activityHTML(p.activity.slice(0,4))+
+   '<button class="btn ghost xs mt8" data-tab1="activity" style="color:var(--accent-hi)">See full activity →</button></div></div>';
+  right+='</div>';
+
+  var stats='<div class="stats mb16">'+
+   '<div class="stat"><div class="lb">Status</div><div class="vl"><span class="flex ai-c g8">'+dotHTML(p.status)+STATUS_META[p.status].label+'</span></div></div>'+
+   '<div class="stat"><div class="lb">Latest run</div><div class="vl mono">'+(latest?'#'+latest.runId:'—')+'</div></div>'+
+   '<div class="stat"><div class="lb">Started</div><div class="vl">'+(latest?latest.created:'—')+'</div></div>'+
+   '<div class="stat"><div class="lb">Duration</div><div class="vl">'+(latest?latest.dur:'—')+'</div></div>'+
+   '<div class="stat"><div class="lb">Total runs</div><div class="vl">'+p.totalRuns+'</div></div></div>';
+
+  var liveUrl='<div class="card mb16"><div class="card-body" style="padding:14px 18px">'+
+   '<div class="flex ai-s jb flex-wrap g12"><div class="flex1" style="min-width:220px">'+
+   '<div class="lb tiny" style="text-transform:uppercase;letter-spacing:.06em;color:var(--dim);font-weight:600;margin-bottom:6px">Live URL</div>'+
+   '<div class="flex ai-c g8"><code class="mono" style="font-size:13px;color:var(--accent-hi);overflow-wrap:anywhere">'+esc(p.url||'Not available')+'</code>'+
+   (p.url?'<button class="icon-btn sm" data-copy="'+esc(p.url)+'">'+icon('copy')+'</button>':'')+'</div></div>'+
+   '<div class="flex ai-c flex-wrap g12">'+
+   '<span class="flex ai-c g6 tiny" style="color:var(--dim)"><span>Commit</span><span class="mono" style="color:#cbd5e1">'+(latest?shortSha(latest.headSha):'—')+'</span><button class="icon-btn sm" data-copy="'+(latest?latest.headSha:'')+'">'+icon('copy')+'</button></span>'+
+   '<span class="flex ai-c g6 tiny" style="color:var(--dim)"><span>Platform</span><span class="mono" style="color:#cbd5e1">'+platformLabel+'</span></span>'+
+   '<span class="flex ai-c g6 tiny" style="color:var(--dim)"><span>Route</span><span class="mono" style="color:#cbd5e1;overflow-wrap:anywhere">'+(p.url?esc(p.url):'<name>.'+(p.provider==='aws'?(p.type==='amplify'?'amplifyapp.com':'execute-api.amazonaws.com'):p.type==='pages'?'pages.dev':'workers.dev'))+'</span></span>'+
+   '</div></div></div></div>';
+
+  var cards='<div class="split" style="grid-template-columns:1fr 1fr;margin-bottom:16px;gap:12px">'+
+   '<div class="card"><div class="card-head"><span class="ttl">'+icon('box')+' Template</span></div><div style="padding:13px 16px">'+row('Name',esc(p.tpl.name))+row('Source',p.tpl.c3?'create-cloudflare (live)':'Built-in')+row('Runtime',p.tpl.runtime)+row('Files',p.tpl.files.length)+row('Requires route','No')+'</div></div>'+
+   '<div class="card"><div class="card-head"><span class="ttl">'+icon('rocket')+' Deploy workflow</span></div><div style="padding:13px 16px">'+
+   row('Setup','<span class="mono" style="font-size:11px">'+(p.tpl.setup||'—')+'</span>')+
+   row('Build','<span class="mono" style="font-size:11px">'+(p.tpl.build||'—')+'</span>')+
+   row('Deploy','<span class="mono" style="font-size:11px">'+p.tpl.cmd+'</span>')+
+   row('Triggered by','push to main + workflow_dispatch')+
+   (p.provider==='aws'
+    ?'<div class="tiny dim mt8" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#060d1c">Runs in GitHub Actions using <code class="mono">AWS_ACCESS_KEY_ID</code>, <code class="mono">AWS_SECRET_ACCESS_KEY</code>, <code class="mono">AWS_REGION</code>.</div>'
+    :'<div class="tiny dim mt8" style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#060d1c">Runs in GitHub Actions using <code class="mono">CLOUDFLARE_API_TOKEN</code> and <code class="mono">CLOUDFLARE_ACCOUNT_ID</code>.</div>')+
+   '</div></div></div>';
+
+  return '<div class="split">'+
+   '<div>'+stats+liveUrl+cards+
+   '<div class="card mb16"><div class="card-head"><span class="ttl">Repo &amp; security</span><span class="pill '+(p.access==='public'?'slate':'emerald')+'">'+(p.access==='public'?'Public site':'Protected · '+(p.access==='org'?'org key':'members key'))+'</span></div>'+
+   '<div class="card-body" style="padding:12px 16px"><div class="flex ai-c jb flex-wrap g8">'+
+   '<a class="iconlink"><span class="flex ai-c g6">'+icon('gh')+esc(p.owner)+'/'+esc(p.repo)+'</span></a>'+
+   '<span class="tiny dim">'+(p.access==='public'?'Anyone with the link can open the site.':'Shared access key controls who can open the deployed site.')+'</span></div></div></div>'+
+   '</div>'+right+'</div>';
+}
+function row(l,v){return '<div class="dl"><dt>'+l+'</dt><dd>'+v+'</dd></div>'}
+function deploysTab(p){
+  var rows=p.runs.length?p.runs.map(function(r,i){
+    var meta=runMeta(r);
+    return '<tr><td class="mono"><a class="accent">#'+r.runId+'</a></td><td>'+statusPill(runStatus(r))+'</td>'+
+     '<td class="mono" style="color:var(--muted)">'+shortSha(r.headSha)+'</td><td class="muted">'+r.created+'</td>'+
+     '<td class="muted">'+r.dur+'</td><td style="text-align:right"><button class="btn ghost xs" data-rlog="'+p.id+'">Logs</button></td></tr>'}).join('')
+    :'';
+  return '<div class="card"><div class="card-head"><span class="ttl">Deploy history</span><span class="pill slate" style="margin-left:8px">'+p.runs.length+'</span>'+
+   '<a class="accent tiny" style="margin-left:auto">View workflow runs ↗</a></div>'+
+   (p.runs.length
+    ?'<div class="tblwrap" style="border:none;border-radius:0"><table class="tbl"><thead><tr><th>Run</th><th>Status</th><th>Commit</th><th>Started</th><th>Duration</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+    :'<div class="card-body"><div class="empty">No deploys yet. Push to main or hit Re-deploy to trigger the first workflow run.</div></div>')+
+   '</div>';
+}
+function runMeta(r){}
+function runStatus(r){
+  if(r.status==='in_progress')return 'running';
+  if(r.status==='queued')return 'queued';
+  if(r.conclusion==='success')return 'success';
+  if(r.conclusion==='failure')return 'failure';
+  if(r.conclusion==='cancelled')return 'cancelled';
+  return 'unknown';
+}
+function envTab(p){
+  var rows=p.env.map(function(v){
+    return '<div class="flex ai-c jb g8" style="padding:10px 2px;border-bottom:1px solid var(--line-soft)">'+
+     '<div class="flex ai-c g8 flex1"><span class="mono" style="font-size:13px">'+esc(v.key)+'</span>'+
+     '<span class="chip '+(v.kind==='secret'?'amber':'sky')+'">'+v.kind+'</span></div>'+
+     '<span class="mono dim" style="font-size:11px">'+(v.kind==='secret'?'••••••••':'value set')+'</span>'+
+     '<button class="btn ghost xs" data-envdel="'+esc(v.key)+'">Delete</button></div>'}).join('');
+  return '<div class="card"><div class="card-head"><span class="ttl">'+icon('key')+' Environment variables</span>'+
+   '<span class="pill slate" style="margin-left:8px">'+p.env.length+'</span>'+
+   '<button class="accent tiny" style="margin-left:auto;background:none;border:none;cursor:pointer" id="envRefr">'+icon('refr','')+' Refresh</button></div>'+
+   '<div class="card-body">'+(p.env.length?rows:'<div class="tiny dim">No environment variables set. These are injected into the worker at runtime.</div>')+'</div>'+
+'<div class="card-body" style="border-top:1px solid var(--line-soft)"><div class="flex g8 flex-wrap">'+
+    '<div class="flex1 field mb0" style="min-width:160px"><label class="tiny" style="margin-bottom:4px">Key</label><input class="input mono" id="envKey" placeholder="MY_KEY"></div>'+
+   '<div class="flex1 field mb0" style="min-width:160px"><label class="tiny" style="margin-bottom:4px">Value</label><input class="input mono" id="envVal" placeholder="my-value"></div>'+
+   '<div class="flex ai-c g8" style="align-self:end;margin-bottom:0"><label class="flex ai-c g6 tiny" style="color:#cbd5e1"><input type="checkbox" id="envSecret" checked> Encrypt as secret</label>'+
+   '<button class="btn primary" id="envAdd">Add var</button></div></div></div></div>';
+}
+function bindingsTab(p){
+  var rows=p.binds.map(function(b){
+    var st={kv:'pill sky',d1:'pill emerald',r2:'pill purple',turnstile:'pill teal',ai_search:'pill indigo'}[b.type]||'pill slate';
+    return '<div class="flex ai-c jb g8" style="padding:10px 2px;border-bottom:1px solid var(--line-soft)">'+
+     '<div class="flex ai-c g8 flex1"><span class="'+st+'">'+b.type+'</span><span class="mono" style="font-size:13px">'+esc(b.name)+'</span>'+
+     '<span class="mono dim trunc" style="font-size:11px">'+esc(b.resource)+'</span></div>'+
+     '<button class="btn ghost xs" data-bkdel="'+esc(b.name)+'">Delete</button></div>'}).join('');
+  return '<div class="card"><div class="card-head"><span class="ttl">'+icon('box')+' Cloudflare bindings</span>'+
+   '<span class="pill slate" style="margin-left:8px">'+p.binds.length+'</span>'+
+   '<button class="accent tiny" style="margin-left:auto;background:none;border:none;cursor:pointer" id="bkRefr">'+icon('refr','')+' Refresh</button></div>'+
+   '<div class="card-body">'+(p.binds.length?rows:'<div class="tiny dim">No bindings configured yet.</div>')+'</div>'+
+'<div class="card-body" style="border-top:1px solid var(--line-soft)"><div class="flex g8 flex-wrap"><div class="flex1" style="min-width:120px"><label class="tiny" style="margin-bottom:4px">Type</label>'+
+   '<select class="input mono" id="bkType" style="font-size:12px"><option value="kv">KV</option><option>D1</option><option>R2</option><option>Turnstile</option><option value="ai_search">AI Search</option></select></div>'+
+   '<div class="flex1" style="min-width:130px"><label class="tiny" style="margin-bottom:4px">Binding name</label><input class="input mono" id="bkName" placeholder="MY_BUCKET"></div>'+
+   '<div class="flex1" style="min-width:130px"><label class="tiny" style="margin-bottom:4px">Resource</label><input class="input mono" id="bkRes" placeholder="my-resource"></div>'+
+   '<button class="btn primary" id="bkAdd" style="align-self:end;margin-bottom:0">Add binding</button></div></div>'+
+   '<div class="card-body tiny dim" style="border-top:1px solid var(--line-soft)">KV/D1/R2/AI Search bindings are written to <code class="mono">wrangler.toml</code> in the repo and applied by the next deploy. Turnstile widgets are delivered as <code class="mono">*_SITE_KEY</code> / <code class="mono">*_SECRET_KEY</code> env vars.</div></div>';
+}
+function membersTab(p){
+  var can=p.members.some(function(m){return m.role==='owner'&&m.username===session.username});
+  var rows=p.members.map(function(m){
+    var ghc=m.ghState==='active'?'pill emerald':m.ghState==='pending'?'pill amber':'pill slate';
+    return '<tr><td class="mono">'+esc(m.username)+'</td><td>'+
+     '<select class="input mono" data-role="'+m.username+'" '+ (can?'':'disabled') +' style="font-size:12px;padding:5px 26px 5px 8px;width:110px">'+
+     '<option value="owner"'+((m.role==='owner')?' selected':'')+'>Owner</option>'+
+     '<option value="member"'+((m.role==='member')?' selected':'')+'>Member</option></select></td>'+
+     '<td><div class="flex flex-wrap ai-c g6"><span class="mono tiny">'+(m.gh||'—')+'</span><span class="pill '+(ghc==='pill slate'?'slate':'')+'" style="'+(ghc==='pill emerald'?'color:#6ee7b7;background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.28)':ghc==='pill amber'?'color:#fcd34d;background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.28)':'')+'">GitHub: '+(m.ghState==='active'?'collaborator':m.ghState==='pending'?'invite sent':'no link')+'</span></div></td>'+
+     '<td style="text-align:right">'+(can?'<button class="btn ghost xs" data-rm='+'"'+m.username+'"'+"'"+'>Remove</button>':'')+'</td></tr>'}).join('');
+  var inv=p.invites?p.invites.map(function(i){
+    return '<div class="flex ai-c jb g8" style="padding:9px 2px;border-bottom:1px solid var(--line-soft)">'+
+     '<div class="flex ai-c g8"><span class="pill '+(i.role==='owner'?'amber':'sky')+'">'+i.role+'</span>'+
+     '<span class="tiny '+((i.state==='pending')?'':'dim')+'">'+i.state+'</span>'+
+     '<span class="tiny dim">by '+esc(i.by)+' · expires '+i.expires+'</span></div>'+
+     (i.state==='pending'?'<button class="btn ghost xs" data-revoke="'+esc(i.by)+'">Revoke</button>':'')+'</div>'}).join(''):'';
+  return '<div class="card mb16"><div class="card-head"><span class="ttl">Invite a member</span></div>'+
+   '<div class="card-body"><div class="tiny dim mb12">Invite links are single-use and expire after 7 days. The person you invite chooses their username and GitHub handle when they accept.</div>'+
+   '<div class="flex flex-wrap ai-c g8"><select class="input mono" id="invRole" style="width:120px;font-size:12px"><option value="member">Member</option><option value="owner">Owner</option></select>'+
+   '<button class="btn primary" id="genInv">Generate invite link</button></div>'+
+   '<div id="invUrl" class="mt12" style="display:none"><div class="flex ai-c g8" style="border:1px solid var(--line);background:#060d1c;border-radius:9px;padding:9px 12px">'+
+   '<code class="mono flex1 trunc" style="font-size:11.5px;color:var(--accent-hi)" id="invUrlTxt"></code>'+
+   '<button class="icon-btn smCopy" data-copy="">'+icon('copy')+'</button></div>'+
+   '<div class="tiny dim mt8">Single-use · expires in 7 days · <a class="accent" data-nav-link="invite">Preview the invite page →</a></div></div>'+
+   '</div></div>'+
+   '<div class="card mb16"><div class="card-head"><span class="ttl">Members</span><span class="pill slate" style="margin-left:8px">'+p.members.length+'</span></div>'+
+   '<div class="tblwrap" style="border:none;border-radius:0"><table class="tbl"><thead><tr><th>Username</th><th>Role</th><th>GitHub</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
+   (p.invites&&p.invites.length?'<div class="card"><div class="card-head"><span class="ttl">Invites</span><span class="pill slate" style="margin-left:8px">'+p.invites.length+'</span></div><div style="padding:4px 16px 8px">'+inv+'</div></div>':'')+
+   '<p class="tiny dim mt16">Signed in as a project <span style="color:#cbd5e1">'+session.username+'</span>. Access is scoped to this project; global admins see everything.</p>';
+}
+function accessTab(p){
+  var modes=[['public','Public','Anyone with the link can open the site.'],['org','Organization','A shared access key your whole org can use.'],['members','Members only','Shared access key shown to this project’s members. Rotate to revoke.']];
+  var cans=p.access==='public';
+  var labels=['public','org','members'];
+  var cur=p.access;
+  return '<div class="card mb16"><div class="card-head"><span class="ttl">'+icon('lock')+' Site access</span></div>'+
+   '<div class="card-body"><div class="tiny dim mb12">Lock the deployed prototype with a shared access key. Visitors enter the key in the browser’s login prompt; the deployed site handles the check, so preview branches are protected too. Takes effect on the next auto-deploy (~1 minute).</div>'+
+   modes.map(function(m){
+     return '<label class="flex ai-s g12" style="border:1px solid '+(cur===m[0]?'rgba(246,130,31,.5)':'var(--line)')+';background:'+(cur===m[0]?'rgba(246,130,31,.05)':'rgba(15,23,42,.4)')+';border-radius:9px;padding:10px 12px;margin-bottom:8px;cursor:pointer">'+
+     '<input type="radio" name="acc" value="'+m[0]+'" '+(cur===m[0]?'checked':'')+' id="acc'+m[0]+'">'+
+     '<span><span style="font-weight:600;font-size:13px">'+m[1]+'</span><span class="block dim tiny">'+m[2]+'</span></span></label>'}).join('')+
+   '<div class="flex flex-wrap g8 mt8">'+
+   (cur!=='public'?'<button class="btn primary" id="accApply">Apply</button>':'')+
+   (cur==='public'?'<button class="btn primary" id="accProtect">Protect this site</button>':'')+
+   (cur!=='public'?'<button class="btn ghost" id="accRotate">'+icon('refr')+' Rotate key</button><button class="btn ghost" id="accPublic">Make public</button>':'')+
+   '</div></div></div>'+
+   (cur!=='public'?'<div class="card"><div class="card-head"><span class="ttl">'+icon('key')+' Access key</span></div>'+
+   '<div class="card-body"><div class="flex ai-c g8"><code class="mono flex1" style="border:1px solid var(--line);background:#060d1c;border-radius:8px;padding:9px 12px;color:var(--accent-hi)">'+esc(p.accessKey||('nj2-'+p.name+'-sitekey'))+'</code>'+
+   '<button class="icon-btn smCopy" data-copy="'+esc(p.accessKey||('nj2-'+p.name+'-sitekey'))+'">'+icon('copy')+'</button></div>'+
+   '<div class="tiny dim mt8">Share this key with '+ (cur==='members'?'project members':'your organization')+'. Rotate to revoke individual access.</div></div></div>':'')+'';
+}
+/* ── project wiring ────────────────────────────────────────────── */
+function wireProject(){
+  var p=projById(VIEW.params.id);
+  document.querySelectorAll('#view [data-tab]').forEach(function(el){el.onclick=function(){P.tab=el.dataset.tab;refresh()}});
+  document.querySelectorAll('#view [data-tab1]').forEach(function(el){el.onclick=function(){P.tab=el.dataset.tab1;refresh()}});
+  document.querySelectorAll('#view [data-nav-live]').forEach(function(el){el.onclick=function(){live.branch='main';go('live',{id:p.id})}});
+  document.querySelectorAll('#view .smCopy').forEach(function(el){el.onclick=function(){navigator.clipboard&&navigator.clipboard.writeText(el.dataset.copy||'');toast('Copied to clipboard','ok')}});
+  var rd=$('redeploy');if(rd)rd.onclick=function(){
+    rd.disabled=true;rd.innerHTML='<span class="spin"></span> Triggering…';
+    setTimeout(function(){
+      rd.disabled=false;rd.innerHTML=icon('refr')+' Re-deploy';
+      var run={runId:Math.floor(100+Math.random()*300),status:'in_progress',conclusion:null,headSha:'e4f0a'+(Math.floor(Math.random()*9)+1),created:'just now',updated:'just now',dur:'—',
+       steps:[{name:'Checkout code',s:'in_progress',c:null}],text:'Re-deploy triggered manually from Launchpad.'};
+      p.runs.unshift(run);p.status='running';p.totalRuns++;
+      logAudit(session.username,'redeploy',p.name,'Triggered re-deploy (run #'+run.runId+')','ok');
+      notice(p,'Re-deploy triggered — a new workflow run is starting.','ok');refresh();
+    },900);
+  };
+  var ob=$('overflowBtn');if(ob)ob.onclick=function(e){e.stopPropagation();var m=$('overflowMenu');m.style.display=m.style.display==='none'?'block':'none'};
+  document.addEventListener('mousedown',function(e){var m=$('overflowMenu');if(m&&m.style.display==='block'&&!e.target.closest('#overflowBtn')&&!e.target.closest('#overflowMenu'))m.style.display='none'});
+  var ov=$('ovRepo');if(ov)ov.onclick=function(){toast('Opening '+p.owner+'/'+p.repo+' on GitHub…','info')};
+  var ovd=$('ovDel');if(ovd)ovd.onclick=function(){deleteModal(p)};
+  // env
+  var eAdd=$('envAdd');if(eAdd)eAdd.onclick=function(){
+    var k=$('envKey').value.trim(),v=$('envVal').value.trim();
+    if(!k||!v){toast('Enter a key and value first','err');return}
+    p.env.push({key:k,kind:$('envSecret').checked?'secret':'text'});
+    logAudit(session.username,'env_set',p.name,'Added '+k,'ok');
+    toast('Env variable '+k+' set','ok');refresh();
+  };
+  var eRefr=$('envRefr');if(eRefr)eRefr.onclick=function(){toast('Environment refreshed','info')};
+  document.querySelectorAll('#view [data-envdel]').forEach(function(el){el.onclick=function(){
+    var k=el.dataset.envdel;p.env=p.env.filter(function(v){return v.key!==k});
+    logAudit(session.username,'env_delete',p.name,'Removed '+k,'ok');toast('Env variable '+k+' removed','ok');refresh()}});
+  // bindings
+  var bAdd=$('bkAdd');if(bAdd)bAdd.onclick=function(){
+    var t=$('bkType').value,n=$('bkName').value.trim(),r=$('bkRes').value.trim();
+    if(!n||!r){toast('Enter a binding name and resource','err');return}
+    p.binds.push({type:t,name:n,resource:r});
+    logAudit(session.username,'binding_add',p.name,'Added '+t+' binding '+n+' → '+r,'ok');
+    toast('Binding '+n+' added — redeploy triggered in the repo','ok');refresh();
+  };
+  var bkRefr=$('bkRefr');if(bkRefr)bkRefr.onclick=function(){toast('Bindings refreshed','info')};
+  document.querySelectorAll('#view [data-bkdel]').forEach(function(el){el.onclick=function(){var n=el.dataset.bkdel;p.binds=p.binds.filter(function(b){return b.name!==n});toast('Binding '+n+' removed — redeploy triggered','ok');refresh()}});
+  // members
+  var gi=$('genInv');if(gi)gi.onclick=function(){
+    var role=$('invRole').value;
+    var url='https://launchpad.org/invite/lp-'+p.name+'-'+Math.random().toString(36).slice(2,8);
+    p.invites.push({role:role,by:session.username,state:'pending',expires:'Sep 25, 2026'});
+    $('invUrl').style.display='block';$('invUrlTxt').textContent=url;
+    $('invUrl').querySelector('.smCopy').dataset.copy=url;
+    logAudit(session.username,'invite_create',p.name,'Created '+role+' invite','ok');
+    toast('Invite link created ('+role+') — expires in 7 days','ok');
+  };
+  document.querySelectorAll('#view [data-revoke]').forEach(function(el){el.onclick=function(){p.invites=p.invites.map(function(i){return i.by===el.dataset.revoke?{role:i.role,by:i.by,state:'revoked',expires:i.expires}:i});toast('Invite revoked','ok');refresh()}});
+  document.querySelectorAll('#view [data-role]').forEach(function(el){el.onchange=function(){p.members=p.members.map(function(m){return m.username===el.dataset.role?{username:m.username,role:el.value,gh:m.gh,ghState:m.ghState}:m});logAudit(session.username,'member_role_change',p.name,el.dataset.role+' → '+el.value,'ok');toast('Role updated','ok');refresh()}});
+  document.querySelectorAll('#view [data-rm]').forEach(function(el){el.onclick=function(){var u=el.dataset.rm;p.members=p.members.filter(function(m){return m.username!==u});logAudit(session.username,'member_remove',p.name,'Removed '+u,'ok');toast('Member removed','ok');refresh()}});
+  // access
+  document.querySelectorAll('#view input[name=acc]').forEach(function(el){el.onchange=function(){p.access=el.value}});
+  var ap=$('accApply');if(ap)ap.onclick=function(){logAudit(session.username,'site_access_enable',p.name,'Mode → '+p.access,'ok');toast('Site access updated — takes effect after next auto-deploy (~1 min)','ok');refresh()};
+  var apt=$('accProtect');if(apt)apt.onclick=function(){p.access='org';p.accessKey=p.accessKey||('nj2-'+p.name+'-sitekey');logAudit(session.username,'site_access_enable',p.name,'Protected with org key','ok');toast('Site protected with an org access key','ok');refresh()};
+  var ar=$('accRotate');if(ar)ar.onclick=function(){p.accessKey='nj2-'+p.name+'-'+Math.random().toString(36).slice(2,8);logAudit(session.username,'site_access_rotate',p.name,'Rotated access key','ok');toast('New access key generated — takes effect after the next deploy','ok');refresh()};
+  var apb=$('accPublic');if(apb)apb.onclick=function(){p.access='public';logAudit(session.username,'site_access_disable',p.name,'Made public','ok');toast('Site is now public','ok');refresh()};
+  // logs
+  document.querySelectorAll('#view [data-rlog]').forEach(function(el){el.onclick=function(){var q=projById(el.dataset.rlog);showLogsModal(q,0)}});
+  document.querySelectorAll('#view [data-nav-link]').forEach(function(el){el.onclick=function(){go('invite',{id:p.id})}});
+}
+function notice(p,msg,kind){
+  var b=$('noticeBox');b.innerHTML='<div class="'+ (kind==='ok'?'okbox':'') +'">'+icon('check')+'<span>'+esc(msg)+'</span><button class="btn ghost xs" style="margin-left:auto" onclick="this.parentNode.remove()">Dismiss</button></div>';
+}
+
+/* ── LIVE LOGS ─────────────────────────────────────────────────── */
+function vLive(){
+  var p=projById(VIEW.params.id);
+  if(!p)return '';
+  return '<div class="live-bar">'+
+   '<div class="live-top">'+
+   '<div class="flex ai-c g12"><button class="btn ghost sm" id="llBack">'+icon('back')+' Back to project</button>'+
+   '<span style="width:1px;height:20px;background:var(--line-soft)"></span>'+
+   '<span class="flex ai-c g8" style="font-weight:600">'+icon('term')+' Live Logs <span class="br">'+esc(p.name)+'</span></span></div>'+
+   '<div class="flex ai-c g12 flex-wrap"><span class="flex ai-c g8 mono tiny" id="llConn" style="height:22px">'+icon('branch')+
+   '<select class="input mono" id="llBranch" style="font-size:12px;padding:4px 26px 4px 8px" '+(live.streaming?'disabled':'')+'>'+
+   ['main','dev','staging','feature/preview','fix/hotfix'].map(function(b){return '<option'+(live.branch===b?' selected':'')+'>'+b+'</option>'}).join('')+'</select></span>'+
+   '<span id="llState" class="mono tiny" style="display:flex;align-items:center;gap:7px"><span id="llDot" style="width:8px;height:8px;border-radius:50%" class="dot-dim"></span><span id="llTxt" style="color:var(--dim)">IDLE</span></span>'+
+   (live.streaming
+    ?'<button class="btn" id="llStop" style="border-color:rgba(248,113,113,.5);color:#fca5a5;background:rgba(127,29,29,.3);height:31px">'+icon('stop')+' Stop</button>'
+    :'<button class="btn primary wood" id="llGo" style="height:31px">'+icon('play')+' Connect</button>')+
+   '</div></div>'+
+   '<div class="ll-body" id="llBody"></div>'+
+   '</div>'+
+   '<div class="live-status"><div class="flex ai-c g16"><span class="flex ai-c g6">Events <span class="br">'+live.entries.length+'</span></span>'+
+   '<span class="flex ai-c g6">Branch <span class="br">'+(live.streaming?live.branch:'—')+'</span></span>'+
+   '<span class="flex ai-c g6">'+(live.autoScroll?'<button class="btn xs" id="llClear" style="border-color:var(--line)">Clear</button>':'')+'</span></div>'+
+   '<span>'+(!live.autoScroll&&live.entries.length?'<button class="btn xs" id="llResume" style="border-color:rgba(56,189,248,.5);color:var(--sky)">Resume scroll ↓</button>':'')+
+   '<span style="margin-left:12px">Ephemeral · may be sampled under high traffic</span></span></div>';
+}
+var LOGPOOL=[
+ ['ok','GET','/healthz','request ok'],
+ ['ok','GET','/api/items?limit=20','cache hit in KV · 4ms'],
+ ['ok','POST','/api/orders','wrote row to D1'],
+ ['ok','GET','/','served index from static assets'],
+ ['error','POST','/api/orders','ValidationError: missing fields'],
+ ['ok','GET','/api/items?limit=20','cache miss · upstream 22ms'],
+ ['ok','GET','/assets/app.js','200 · 140KB'],
+ ['ok','POST','/api/sessions','issued JWT'],
+ ['warn','GET','/api/search?q=','AI Search returned 0 results'],
+ ['ok','GET','/favicon.ico','304'],
+ ['error','GET','/broken','ReferenceError: x is not defined'],
+ ['ok','GET','/api/billing','invoice lookup · 9ms']
+];
+var llSeq=0;
+function renderLive(){
+  var b=$('llBody');if(!b)return '';
+  var h='';
+  if(!live.entries.length){
+    h='<div style="text-align:center;padding:60px 20px;color:#334155"><div style="font-size:26px;margin-bottom:10px">'+icon('term','')+'</div><div style="font-size:12px">'+
+     (live.streaming?'Waiting for requests… send a request to your worker and it will appear here.':'Select a branch and click <b style="color:#7f9dc0">Connect</b> to start streaming live logs.')+'</div></div>';
+  }else{
+    h=live.entries.map(function(e){
+      var outC=e.outcome==='ok'?'color:#34d399':e.outcome==='error'?'color:#f87171':'color:#fbbf24';
+      var lvC=e.level==='error'?'color:#f87171':e.level==='warn'?'color:#fbbf24':'color:#94a3b8';
+      return '<div class="ll-entry"><div class="flex ai-c flex-wrap g8" style="font-size:11px">'+
+       '<span style="color:#334155">'+e.at+'</span><b style="'+outC+'">'+e.outcome+'</b>'+
+       (e.method?'<b style="'+(e.method==='GET'?'color:#34d399':e.method==='POST'?'color:#fbbf24':'color:#38bdf8')+'">'+e.method+'</b>':'')+
+       '<span style="color:#94a3b8">'+esc(e.url)+'</span>'+
+       '<button class="btn xs ll-copy" style="margin-left:auto;border-color:var(--line);color:#475569;height:20px">Copy</button></div>'+
+       '<div class="mt4" style="color:'+lvC+'">['+e.level+'] '+esc(e.msg)+'</div></div>'}).join('');
+  }
+  b.innerHTML=h;
+  var si=$('llConn')&&null;
+  var ev=$('llState');var dot=$('llDot');var txt=$('llTxt');
+  if(ev){ev.style.display='flex';dot.className='dot-'+(live.connected?'':'pulse');dot.style.background=live.connected?'#34d399':'#64748b';
+    txt.style.color=live.connected?'#34d399':'#64748b';txt.textContent=live.connected?'LISTENING':'CONNECTING…'}
+  if(live.streaming)b.scrollTop=b.scrollHeight;
+  document.querySelectorAll('.ll-copy').forEach(function(c){c.onclick=function(){navigator.clipboard&&navigator.clipboard.writeText('');toast('Entry copied','ok')}});
+  var cl=$('llClear');if(cl)cl.onclick=function(){live.entries=[];renderLive()};
+  var rs=$('llResume');if(rs)rs.onclick=function(){live.autoScroll=true;renderLive()};
+  var ls=$('llStatus')&&null;
+  refreshLiveBar();
+}
+function refreshLiveBar(){
+  var evs=document.querySelector('.live-status .br');/* noop */
+}
+function wireLive(){
+  var p=projById(VIEW.params.id);
+  var lb=$('llBack');if(lb)lb.onclick=function(){stopLive();P.tab='overview';go('project',{id:p.id})};
+  var br=$('llBranch');if(br)br.onchange=function(){live.branch=br.value};
+  function stream(){
+    live.streaming=true;live.connected=false;live.entries=[];
+    var st=$('llState');if(st){st.style.color='#64748b';$('llTxt').textContent='CONNECTING…';$('llDot').className='dot-pulse';$('llDot').style.background='#64748b'}
+    setTimeout(function(){live.connected=true;renderLive()},1200);
+    live.timer=setInterval(function(){
+      var pick=LOGPOOL[Math.floor(Math.random()*LOGPOOL.length)];
+      live.entries.push({id:llSeq++,at:new Date().toLocaleTimeString(),outcome:pick[0],method:pick[1],url:pick[2],level:pick[3]==null?'log':(pick[3].indexOf('cache')>-1?'info':pick[0]==='error'?'error':pick[0]==='warn'?'warn':'log'),msg:pick[3]});
+      if(live.entries.length>80)live.entries.shift();
+      renderLive();
+    },1600);
+    renderLive();mbToggle();
+  }
+  function mbToggle(){
+    var goB=$('llGo'),st=$('llStop');
+    if(live.streaming){
+      if(goB){var s=document.createElement('button');s.id='llStop';s.className='btn';s.style.cssText='border-color:rgba(248,113,113,.5);color:#fca5a5;background:rgba(127,29,29,.3);height:31px';s.innerHTML=icon('stop')+' Stop';goB.parentNode.replaceChild(s,goB);s.onclick=stopStream}
+    }else{
+      if(st){var g=document.createElement('button');g.id='llGo';g.className='btn primary wood';g.style.cssText='height:31px';g.innerHTML=icon('play')+' Connect';st.parentNode.replaceChild(g,st);g.onclick=stream}
+    }
+  }
+  function stopStream(){stopLive();renderLive();toast('Live log stream stopped','info');mbToggle()}
+  var goB=$('llGo');if(goB)goB.onclick=stream;
+  var sp=$('llStop');if(sp)sp.onclick=stopStream;
+}
+function stopLive(){if(live.timer)clearInterval(live.timer);live.timer=null;live.streaming=false;live.connected=false}
+
+/* ── PREVIEW BRANCH ────────────────────────────────────────────── */
+function vPreview(){
+  var p=projById(VIEW.params.id);if(!p)return '';
+  var branch=VIEW.params.branch||'dev';
+  var preview=null;
+  if(p.previews)preview=p.previews.find(function(x){return x.branch===branch});
+  var name=preview?preview.name:p.name+'-'+branch;
+  return '<div class="live-bar plv" style="position:absolute;height:auto;min-height:100vh">'+
+   '<div class="live-top"><div class="flex ai-c g12"><button class="btn ghost sm" id="pvBack">'+icon('back')+' Back to project</button>'+
+   '<span class="flex ai-c g8" style="font-weight:600">'+icon('term')+' Preview Branch <span class="br">'+branch+'</span></span></div></div>'+
+   '<div style="max-width:880px;margin:0 auto;padding:26px 24px;width:100%">'+
+   '<div class="card mb16"><div class="flex ai-c jb flex-wrap g12" style="padding:16px 18px">'+
+   '<div class="flex ai-c g8"><span class="dot-ok"></span><span class="mono" style="font-size:16px;font-weight:600">'+branch+'</span><span class="pill emerald">Live</span></div>'+
+   '<div class="flex ai-c g8"><button class="btn primary wood sm" href="" id="pvOpen" style="height:30px">Open preview '+icon('ext')+'</button>'+
+   '<button class="btn ghost sm" data="cpy" style="height:30px" id="pvCopy">Copy URL</button></div></div>'+
+   '<div style="padding:0 18px 14px" class="mono tiny dim">'+name+'.newpage.workers.dev · deployed from branch '+branch+'</div></div>'+
+   '<div class="grid2" style="grid-template-columns:1fr 1fr;gap:14px">'+
+   '<div class="card"><div class="card-head"><span class="ttl">Worker</span></div><div style="padding:10px 16px">'+
+   row('Status','<span class="pill emerald">Running</span>')+row('Created','just now · Sep 18, 09:41')+row('Last modified','2m ago')+'</div></div>'+
+   '<div class="card"><div class="card-head"><span class="ttl">Deploy</span></div><div style="padding:10px 16px">'+
+   row('Latest run','<span class="pill emerald">Success</span>')+row('Updated','2m ago')+row('Run','<a class="mono accent">#96 ↗</a>')+'</div></div>'+
+   '<div class="card"><div class="card-head"><span class="ttl">Resources</span><span class="pill slate">3</span></div><div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:6px">'+
+   '<span class="chip sky" style="color:var(--sky)">'+name+'-kv <span class="dim" style="font-weight:400">KV namespace</span></span>'+
+   '<span class="chip" style="color:var(--emerald)">'+name+'-db <span class="dim" style="font-weight:400">D1 database</span></span>'+
+   '<span class="chip" style="color:var(--purple)">'+name+'-files <span class="dim" style="font-weight:400">R2 bucket</span></span></div></div>'+
+   '<div class="card"><div class="card-head"><span class="ttl">Environment</span><span class="pill slate">2</span></div><div style="padding:12px 16px;display:flex;flex-wrap:wrap;gap:6px">'+
+   '<span class="chip">API_KEY</span><span class="chip">LOG_LEVEL</span></div></div>'+
+   '</div>'+
+   '<div class="card mt16"><div class="card-head"><span class="ttl">Branch</span><a class="accent tiny" style="margin-left:auto">Latest commit ↗</a></div>'+
+   '<div style="padding:12px 16px"><span class="mono" style="font-size:12px;background:#1e293b;border-radius:6px;padding:1px 6px;color:#94a3b8">9f3a211</span>'+
+   '<span style="margin-left:8px;font-size:13px">Add checkout form progress states</span>'+
+   '<div class="tiny dim mt4">jane-doe · 6m ago</div></div></div>'+
+   '</div></div>';
+}
+function wirePreview(){
+  var p=projById(VIEW.params.id);
+  $('pvBack').onclick=function(){P.tab='overview';go('project',{id:p.id})};
+  $('pvOpen').setAttribute('href','#');$('pvOpen').onclick=function(e){e.preventDefault();toast('Demo URL — opens in a real deployment','info')};
+  $('pvCopy').onclick=function(){navigator.clipboard&&navigator.clipboard.writeText('https://test.newpage.workers.dev');toast('Preview URL copied','ok')};
+}
+
+/* ── INVITE ────────────────────────────────────────────────────── */
+var INVITE={stage:'pending',username:'',github:''};
+function vInvite(){
+  var p=VIEW.params.id?projById(VIEW.params.id):null;
+  var H='<div class="login-wrap" style="min-height:100vh"><div class="login-card">'+
+   '<div class="login-badge" style="background:linear-gradient(135deg,#0e7490,#164e63);color:#fff">#</div>'+
+   '<div style="text-align:center;margin-bottom:18px"><div style="font-size:17px;font-weight:650">You’ve been invited</div>'+
+   '<div class="muted tiny mt4">to collaborate on a project hosted on Launchpad</div></div><div class="card"><div class="card-body">';
+  if(INVITE.stage==='pending'){
+    var nm=p?p.name:'api-gateway';
+    H+='<div class="okbox mb12" style="margin-bottom:14px">'+icon('check')+'You’ve been invited to <b>'+esc(nm)+'</b> as a <span style="color:var(--accent-hi)">member</span>.</div>'+
+     '<div class="field"><label for="ivU">Choose a username</label><input class="input" id="ivU" value="'+esc(INVITE.username)+'" placeholder="e.g. jane-doe"><span class="help">Lowercase letters, numbers, dots, dashes or underscores.</span></div>'+
+     '<div class="field"><label for="ivG">GitHub username (optional)</label><input class="input" id="ivG" value="'+esc(INVITE.github)+'" placeholder="Your GitHub handle"><span class="help">Adding this invites you as a collaborator on the project’s GitHub repo.</span></div>'+
+     '<div id="ivErr"></div>'+
+     '<button class="btn primary wood" id="ivAccept" style="width:100%;height:38px">Accept invite</button>';
+  }else{
+    H+='<div class="okbox">'+icon('check')+'You’ve joined <b>'+esc(p?p.name:'api-gateway')+'</b> as a member.</div>'+
+     '<div class="tiny dim mb16">Sign in with the Launchpad password and the username you chose to access the project.</div>'+
+     '<button class="btn primary wood" id="ivLogin" style="width:100%;height:38px">Sign in</button>';
+  }
+  H+='</div></div>'+
+   '<div class="demo-hint">This is the single-use invite link page.<br>Link is valid for 7 days. <button class="btn ghost xs" id="ivReset" style="height:24px">Reset demo</button></div>'+
+   '</div></div>';
+  return H;
+}
+function wireInvite(){
+  var u=$('ivU');if(u)u.oninput=function(){INVITE.username=u.value};
+  var g=$('ivG');if(g)g.oninput=function(){INVITE.github=g.value};
+  var ac=$('ivAccept');if(ac)ac.onclick=function(){
+    if(!INVITE.username.trim()){$('ivErr').innerHTML='<div class="errbox mb8">'+icon('warn')+'Choose a username first.</div>';return}
+    ac.disabled=true;ac.innerHTML='<span class="spin"></span> Joining…';
+    setTimeout(function(){
+      INVITE.stage='done';
+      if(VIEW.params.id){var p=projById(VIEW.params.id);p.members.push({username:INVITE.username,role:'member',gh:INVITE.github||null,ghState:INVITE.github?'active':'none'})}
+      logAudit(session.username,'invite_accept',VIEW.params.id?projById(VIEW.params.id).name:'api-gateway',INVITE.username+' accepted an invite','ok');
+      refresh();
+    },900);
+  };
+  var il=$('ivLogin');if(il)il.onclick=function(){INVITE={stage:'pending',username:'',github:''};go('projects')};
+  var ir=$('ivReset');if(ir)ir.onclick=function(){INVITE={stage:'pending',username:'',github:''};refresh()};
+}
+
+/* ── SETTINGS ──────────────────────────────────────────────────── */
+var SET={accountId:'',patEnv:'GITHUB_PAT',awsRegion:'us-east-1',saved:false};
+function vSettings(){
+  var rows=[
+   ['Admin password',true,'LAUNCHPAD_ADMIN_PASSWORD — required to sign in.'],
+   ['GitHub PAT env',true,'GITHUB_PAT (or launchpad.json patEnvVar) — used for GitHub operations.'],
+   ['Cloudflare API token',true,'CLOUDFLARE_API_TOKEN — used for deploys and env vars.'],
+   ['Cloudflare account ID',true,'Set below or via CLOUDFLARE_ACCOUNT_ID.'],
+   ['AWS access key env',true,'AWS_ACCESS_KEY_ID (config) — used for AWS deploys.'],
+   ['AWS secret key env',true,'AWS_SECRET_ACCESS_KEY (config) — used for AWS deploys.'],
+   ['AWS default region',true,'us-east-1 (default).'],
+   ['Secret key',true,'LAUNCHPAD_SECRET — encrypts persisted GitHub tokens at rest.'],
+   ['Target GitHub org',true,'newpage — repos are created under this org.']
+  ];
+  var st=rows.map(function(r){return '<div class="flex ai-c jb g12" style="padding:11px 0;border-bottom:1px solid var(--line-soft)">'+
+   '<div><div style="font-size:13px">'+r[0]+'</div><div class="tiny dim">'+r[2]+'</div></div>'+
+   '<span class="pill emerald">OK</span></div>'}).join('');
+  var auditRows=AUDIT.slice(0,6).map(function(a){
+    var m=ACTION_META[a.action]||{lb:a.action};
+    return '<div class="flex ai-c jb g12" style="padding:10px 0;border-bottom:1px solid var(--line-soft)">'+
+     '<div class="flex ai-c g8"><span class="'+m.c+'">'+m.ic+'</span><span style="font-size:13px"><b>'+esc(a.actor)+'</b> <span class="muted">'+m.lb+(a.project?' on '+esc(a.project):'')+'</span></span></div>'+
+     '<span class="tiny dim">'+esc(a.at)+'</span></div>'}).join('')||'<div class="tiny dim">No activity recorded yet.</div>';
+  return '<div class="page-narrow"><div class="pagehead"><h1>Settings</h1><div class="sub">Server configuration and security status.</div></div>'+
+   '<div class="card mb16"><div class="card-head"><span class="ttl">Security status</span></div><div style="padding:4px 18px">'+st+'</div></div>'+
+   '<div class="card mb16"><div class="card-head"><span class="ttl">Launchpad config</span></div><div style="padding:18px">'+
+   '<div class="field"><label for="sAcct">Default Cloudflare account ID</label><input class="input mono" id="sAcct" value="'+esc(SET.accountId)+'" placeholder="32-char Cloudflare account ID"></div>'+
+   '<div class="field"><label for="sPat">GitHub PAT env var name</label><input class="input mono" id="sPat" value="'+esc(SET.patEnv)+'"></div>'+
+   '<div class="field"><label for="sReg">Default AWS region</label><input class="input mono" id="sReg" value="'+esc(SET.awsRegion)+'"><span class="help">Used for AWS deployments. Overridable per project at launch.</span></div>'+
+   '<div id="setMsg"></div>'+
+   '<button class="btn primary wood" id="saveCfg" style="width:100%;height:38px">Save config</button>'+
+   '</div></div>'+
+   '<div class="card"><div class="card-head"><span class="ttl">Recent activity</span><span style="margin-left:auto" class="tiny dim">'+AUDIT.length+' entries</span></div>'+
+   '<div style="padding:4px 18px">'+auditRows+'</div></div></div>';
+}
+function wireSettings(){
+  var a=$('sAcct');if(a)a.oninput=function(){SET.accountId=a.value};
+  var p=$('sPat');if(p)p.oninput=function(){SET.patEnv=p.value};
+  var r=$('sReg');if(r)r.oninput=function(){SET.awsRegion=r.value};
+  $('saveCfg').onclick=function(){
+    $('saveCfg').disabled=true;$('saveCfg').innerHTML='<span class="spin"></span> Saving…';
+    setTimeout(function(){logAudit(session.username,'config_applied',null,'Updated default account ID / PAT env / AWS region','ok');
+      $('setMsg').innerHTML='<div class="okbox">'+icon('check')+'Config saved.</div>';
+      $('saveCfg').disabled=false;$('saveCfg').innerHTML='Save config';
+      toast('Config saved','ok');refresh();
+    },600);
+  };
+}
+
+/* ── generic wires ─────────────────────────────────────────────── */
+function wireGeneric(){
+  document.querySelectorAll('#view [data-nav]').forEach(function(el){el.onclick=function(){var n=el.dataset.nav;if(n==='home'){W.importMode=false;W.step=1}go(n)}});
+  document.querySelectorAll('#view [data-copy]').forEach(function(el){el.onclick=function(){navigator.clipboard&&navigator.clipboard.writeText(el.dataset.copy||'');toast('Copied to clipboard','ok')}});
+  var navs=document.querySelectorAll('#sidebar [data-nav]');
+  navs.forEach(function(el){el.onclick=function(e){e.preventDefault();var n=el.dataset.nav;if(n==='home'){W.importMode=false;W.step=1}go(n);document.body.classList.remove('drawer-open')}});
+  var tb=$('sbToggle');if(tb)tb.onclick=function(e){e.stopPropagation();document.body.classList.toggle('collapsed')};
+  var lo=$('logout');if(lo)lo.onclick=function(){setTimeout(function(){session=null;toast('Signed out','info');go('login')},200)};
+}
+var WIRES={login:function(){wireLogin();wireGeneric()},home:function(){if(W.importMode)wireImport();else wireHome();wireGeneric()},
+ templates:function(){wireTemplates();wireGeneric()},projects:function(){wireProjects();wireGeneric()},
+ project:function(){wireProject();wireGeneric();wireLeafClosers()},
+ live:function(){wireLive();wireGeneric()},preview:function(){wirePreview();wireGeneric()},
+ invite:function(){wireInvite();wireGeneric()},settings:function(){wireSettings();wireGeneric()}};
+function wireLeafClosers(){
+  /* close overflow menu when clicking elsewhere handled in wireProject */
+}
+
+/* ════════════════════════════════════════════════════════════════
+   5 · Init
+   ════════════════════════════════════════════════════════════════ */
+(function init(){
+  /* sidebar toggle keeps CSS var in sync on resize */
+  render();
+  var last=0;
+  function routeHash(){
+    var h=location.hash||'';
+    if(h==='#login'){session=null;go('login')}
+    else if(h==='#invite'){go('invite')}
+    else if(h==='#projects'&&!session){mockSession()}
+  }
+  window.addEventListener('hashchange',routeHash);
+})();
+function mockSession(){session={username:'admin',globalAdmin:true};go('projects')}
+</script>
+</body>
+</html>
