@@ -5,6 +5,7 @@ I I’ve shared the following:
 - A GitHub repository
 
 There’s a slight twist: check the “presentation prototype.”
+if you don't like twist open it - https://launchpad.arunkabish1.workers.dev
 
 
 
@@ -152,3 +153,5 @@ under `templates/`, and C3-based templates scaffold live from `create-cloudflare
 Manifests carry a `provider` field — `"cloudflare"` (Workers/Pages) or `"aws"` (Lambda/Amplify).
 `scripts/embed-templates.mjs` regenerates `lib/template-assets.gen.ts` after any template changes.
 # FDE-Workshop-Launchpad
+
+
